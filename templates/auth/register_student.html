@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration - Examination Management Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-7">
+            <div class="card shadow-sm p-4">
+                <div class="text-center mb-4">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <h3 class="fw-bold">Student Registration</h3>
+                    <p class="text-muted small">Register to obtain instant access to your academic exam dashboard</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.register_student') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ form_data.get('name', '') if form_data else '' }}" placeholder="e.g. Jane Doe" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ form_data.get('email', '') if form_data else '' }}" placeholder="student@study.iitm.ac.in" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="roll_number" class="form-label">Student Roll Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control text-uppercase" id="roll_number" name="roll_number" value="{{ form_data.get('roll_number', '') if form_data else '' }}" placeholder="e.g. 21F1000123" required>
+                            <div class="form-text">Must be unique across the portal.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="program" class="form-label">Academic Program <span class="text-danger">*</span></label>
+                            <select class="form-select" id="program" name="program" required>
+                                <option value="" disabled {% if not form_data or not form_data.get('program') %}selected{% endif %}>Select Program</option>
+                                <option value="BS in Data Science and Applications" {% if form_data and form_data.get('program') == 'BS in Data Science and Applications' %}selected{% endif %}>BS in Data Science and Applications</option>
+                                <option value="BS in Electronic Systems" {% if form_data and form_data.get('program') == 'BS in Electronic Systems' %}selected{% endif %}>BS in Electronic Systems</option>
+                                <option value="Diploma in Programming" {% if form_data and form_data.get('program') == 'Diploma in Programming' %}selected{% endif %}>Diploma in Programming</option>
+                                <option value="Diploma in Data Science" {% if form_data and form_data.get('program') == 'Diploma in Data Science' %}selected{% endif %}>Diploma in Data Science</option>
+                                <option value="Foundation Level" {% if form_data and form_data.get('program') == 'Foundation Level' %}selected{% endif %}>Foundation Level</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department / School</label>
+                            <input type="text" class="form-control" id="department" name="department" value="{{ form_data.get('department', '') if form_data else '' }}" placeholder="e.g. Computer Science & Engineering">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_number" class="form-label">Contact Number</label>
+                            <input type="tel" class="form-control" id="contact_number" name="contact_number" value="{{ form_data.get('contact_number', '') if form_data else '' }}" placeholder="e.g. +91 9876543210">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" name="password" minlength="6" placeholder="Min 6 characters" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" minlength="6" placeholder="Re-type password" required>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg fs-6">
+                            <i class="bi bi-person-check me-1"></i> Complete Student Registration
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center small">
+                    <p class="mb-0 text-muted">
+                        Already have an account? <a href="{{ url_for('auth.login') }}" class="fw-semibold text-decoration-none">Sign In</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

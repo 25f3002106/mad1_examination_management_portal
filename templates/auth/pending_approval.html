@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Status - Examination Management Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card shadow-sm p-4 text-center">
+                {% if user and user.examiner_profile and user.examiner_profile.approval_status == 'deactivated' %}
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3">
+                        <i class="bi bi-x-octagon-fill fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold text-danger">Examiner Account Deactivated</h3>
+                    <p class="text-muted">
+                        Your examiner profile has been deactivated by the system administrator. You cannot access the examination modules.
+                    </p>
+                {% else %}
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                        <i class="bi bi-hourglass-split fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold">Awaiting Administrator Approval</h3>
+                    <p class="text-muted">
+                        Thank you for registering as an Examiner. Your account has been created with status:
+                        <span class="badge bg-warning text-dark px-3 py-2">PENDING REVIEW</span>
+                    </p>
+                    <div class="alert alert-light border text-start small mb-4">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i> What happens next?</h6>
+                        <ul class="mb-0 ps-3">
+                            <li>An Administrator will review your academic affiliation and contact details.</li>
+                            <li>Once approved, you will be able to log in and access the full Examiner Dashboard.</li>
+                            <li>Pending examiners are strictly restricted from accessing examination authoring and grading functions.</li>
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-box-arrow-right me-1"></i> Log Out
+                    </a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                        <i class="bi bi-house me-1"></i> Return to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

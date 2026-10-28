@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Examiner Registration - Examination Management Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-7">
+            <div class="card shadow-sm p-4">
+                <div class="text-center mb-4">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <h3 class="fw-bold">Examiner Registration</h3>
+                    <p class="text-muted small">Register as an academic examiner and assessment evaluator</p>
+                </div>
+
+                <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-info-circle-fill fs-5 me-3"></i>
+                    <div class="small">
+                        <strong>Security & Governance Policy:</strong> All examiner accounts are set to <strong>Pending</strong> upon registration. Access to the examiner dashboard is granted only after verification and approval by the Administrator.
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.register_examiner') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ form_data.get('name', '') if form_data else '' }}" placeholder="e.g. Dr. Robert Vance" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Official Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ form_data.get('email', '') if form_data else '' }}" placeholder="examiner@dept.iitm.ac.in" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department / Faculty <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="department" name="department" value="{{ form_data.get('department', '') if form_data else '' }}" placeholder="e.g. Department of Data Science" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="contact_information" class="form-label">Contact Information <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="contact_information" name="contact_information" value="{{ form_data.get('contact_information', '') if form_data else '' }}" placeholder="Phone / Office Cabin / Extension" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" name="password" minlength="6" placeholder="Min 6 characters" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" minlength="6" placeholder="Re-type password" required>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-info text-white btn-lg fs-6">
+                            <i class="bi bi-file-earmark-lock me-1"></i> Submit Examiner Application
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center small">
+                    <p class="mb-0 text-muted">
+                        Already registered? <a href="{{ url_for('auth.login') }}" class="fw-semibold text-decoration-none">Sign In</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
