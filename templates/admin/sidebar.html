@@ -1,0 +1,56 @@
+<!-- Admin Navigation Sidebar Partial -->
+<aside class="dashboard-sidebar">
+    <div class="sidebar-title">Admin Management</div>
+    <ul class="sidebar-nav mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'courses' %}active{% endif %}" href="{{ url_for('admin.list_courses') }}">
+                <i class="bi bi-book"></i> Courses
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'examinations' %}active{% endif %}" href="{{ url_for('admin.list_examinations') }}">
+                <i class="bi bi-calendar-check"></i> Examinations
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'slots' %}active{% endif %}" href="{{ url_for('admin.list_slots') }}">
+                <i class="bi bi-calendar2-range"></i> Exam Slots
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'bookings' %}active{% endif %}" href="{{ url_for('admin.list_bookings') }}">
+                <i class="bi bi-bookmark-check"></i> Bookings
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'examiners' %}active{% endif %}" href="{{ url_for('admin.list_examiners') }}">
+                <i class="bi bi-person-badge"></i> Examiners
+                {% if pending_examiners_count and pending_examiners_count > 0 %}
+                    <span class="badge bg-warning text-dark ms-auto">{{ pending_examiners_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'students' %}active{% endif %}" href="{{ url_for('admin.list_students') }}">
+                <i class="bi bi-mortarboard"></i> Students
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_page == 'history' %}active{% endif %}" href="{{ url_for('admin.historical_overview') }}">
+                <i class="bi bi-clock-history"></i> Historical Data
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-title mt-auto">System Status</div>
+    <div class="p-3 bg-light rounded small border">
+        <div class="fw-bold text-dark">{{ current_user.name if current_user else 'Admin' }}</div>
+        <div class="text-muted text-truncate mb-2">{{ current_user.email if current_user else 'admin@emp.iitm.ac.in' }}</div>
+        <span class="badge bg-danger">ADMINISTRATOR</span>
+    </div>
+</aside>

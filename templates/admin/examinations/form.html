@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Edit Examination' if exam else 'Create Examination' }} - EMP Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'examinations' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">{{ 'Edit Examination' if exam else 'Create Examination' }}</h2>
+                <p class="text-muted mb-0">Configure assessment details, timeline controls, marks, and examiners</p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin.list_examinations') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Examinations
+                </a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-10">
+                <div class="card shadow-sm p-4">
+                    <form method="POST" action="{{ url_for('admin.edit_examination', exam_id=exam.id) if exam else url_for('admin.create_examination') }}">
+                        <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-info-circle me-2"></i>General Details</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="course_id" class="form-label">Course <span class="text-danger">*</span></label>
+                                <select class="form-select" id="course_id" name="course_id" required>
+                                    <option value="" disabled {% if not exam and not form_data %}selected{% endif %}>Select Course</option>
+                                    {% for c in courses %}
+                                        <option value="{{ c.id }}"
+                                            {% if (form_data and form_data.get('course_id') == c.id|string) or (exam and exam.course_id == c.id) %}selected{% endif %}>
+                                            {{ c.code }} - {{ c.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Examination Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name"
+                                       value="{{ form_data.get('name') if form_data else (exam.name if exam else '') }}"
+                                       placeholder="e.g. End Term Practical Viva" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="exam_type" class="form-label">Examination Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="exam_type" name="exam_type" required>
+                                    {% set curr_type = form_data.get('exam_type') if form_data else (exam.exam_type if exam else 'Assessment') %}
+                                    <option value="Assessment" {% if curr_type == 'Assessment' %}selected{% endif %}>Assessment</option>
+                                    <option value="Viva" {% if curr_type == 'Viva' %}selected{% endif %}>Viva</option>
+                                    <option value="Practical" {% if curr_type == 'Practical' %}selected{% endif %}>Practical</option>
+                                    <option value="Project Demo" {% if curr_type == 'Project Demo' %}selected{% endif %}>Project Demo</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="duration" class="form-label">Duration (Minutes) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="duration" name="duration" min="5" max="360"
+                                       value="{{ form_data.get('duration') if form_data else (exam.duration if exam else 60) }}" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="max_marks" class="form-label">Maximum Marks <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="max_marks" name="max_marks" min="1" max="1000"
+                                       value="{{ form_data.get('max_marks') if form_data else (exam.max_marks if exam else 100) }}" required>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-clock-history me-2"></i>Timeline & Workflow Controls</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded bg-light">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-person-badge text-info me-1"></i>Examiner Slot Creation Window</h6>
+                                    <div class="mb-3">
+                                        <label for="slot_creation_start_date" class="form-label small">Start Date & Time</label>
+                                        <input type="datetime-local" class="form-control" id="slot_creation_start_date" name="slot_creation_start_date"
+                                               value="{{ exam.slot_creation_start_date.strftime('%Y-%m-%dT%H:%M') if exam and exam.slot_creation_start_date else '' }}">
+                                    </div>
+                                    <div>
+                                        <label for="slot_creation_end_date" class="form-label small">End Date & Time</label>
+                                        <input type="datetime-local" class="form-control" id="slot_creation_end_date" name="slot_creation_end_date"
+                                               value="{{ exam.slot_creation_end_date.strftime('%Y-%m-%dT%H:%M') if exam and exam.slot_creation_end_date else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded bg-light">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-mortarboard text-success me-1"></i>Student Slot Booking Window</h6>
+                                    <div class="mb-3">
+                                        <label for="slot_booking_start_date" class="form-label small">Start Date & Time</label>
+                                        <input type="datetime-local" class="form-control" id="slot_booking_start_date" name="slot_booking_start_date"
+                                               value="{{ exam.slot_booking_start_date.strftime('%Y-%m-%dT%H:%M') if exam and exam.slot_booking_start_date else '' }}">
+                                    </div>
+                                    <div>
+                                        <label for="slot_booking_end_date" class="form-label small">End Date & Time</label>
+                                        <input type="datetime-local" class="form-control" id="slot_booking_end_date" name="slot_booking_end_date"
+                                               value="{{ exam.slot_booking_end_date.strftime('%Y-%m-%dT%H:%M') if exam and exam.slot_booking_end_date else '' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="status" class="form-label">Current Examination Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    {% set curr_status = form_data.get('status') if form_data else (exam.status if exam else 'Draft') %}
+                                    <option value="Draft" {% if curr_status == 'Draft' %}selected{% endif %}>Draft (Setup in progress)</option>
+                                    <option value="Slot Creation" {% if curr_status == 'Slot Creation' %}selected{% endif %}>Slot Creation (Examiners can create slots)</option>
+                                    <option value="Booking Open" {% if curr_status == 'Booking Open' %}selected{% endif %}>Booking Open (Students can book slots)</option>
+                                    <option value="Closed" {% if curr_status == 'Closed' %}selected{% endif %}>Closed (Booking/Slots closed)</option>
+                                    <option value="Completed" {% if curr_status == 'Completed' %}selected{% endif %}>Completed (Assessments finalized)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-people me-2"></i>Assign Examiners</h5>
+                        <div class="border rounded p-3 mb-4 bg-light">
+                            <p class="small text-muted mb-2">Select verified examiners who are authorized to create slots and evaluate submissions for this examination.</p>
+                            <div class="row g-2" style="max-height: 200px; overflow-y: auto;">
+                                {% set assigned_ids = exam.examiners|map(attribute='id')|list if exam else [] %}
+                                {% for examiner in approved_examiners %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="examiner_ids" value="{{ examiner.id }}" id="ex_{{ examiner.id }}"
+                                                {% if examiner.id in assigned_ids %}checked{% endif %}>
+                                            <label class="form-check-label" for="ex_{{ examiner.id }}">
+                                                <strong>{{ examiner.user.name }}</strong>
+                                                <small class="text-muted d-block">{{ examiner.department }} &bull; {{ examiner.user.email }}</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="col-12 text-muted small">No approved examiners currently registered in the system.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <a href="{{ url_for('admin.list_examinations') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-lg me-1"></i> {{ 'Save Changes' if exam else 'Create Examination' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

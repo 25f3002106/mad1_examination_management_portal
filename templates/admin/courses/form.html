@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Edit Course' if course else 'Add New Course' }} - EMP Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'courses' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">{{ 'Edit Course' if course else 'Add New Course' }}</h2>
+                <p class="text-muted mb-0">Configure course metadata, departmental affiliation, and status</p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin.list_courses') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Courses
+                </a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm p-4">
+                    <form method="POST" action="{{ url_for('admin.edit_course', course_id=course.id) if course else url_for('admin.create_course') }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="code" class="form-label">Course Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control text-uppercase" id="code" name="code"
+                                       value="{{ form_data.get('code') if form_data else (course.code if course else '') }}"
+                                       placeholder="e.g. CS1001" required>
+                                <div class="form-text">Unique alphanumeric identifier for the course.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Course Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name"
+                                       value="{{ form_data.get('name') if form_data else (course.name if course else '') }}"
+                                       placeholder="e.g. Modern Application Development I" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="department" class="form-label">Department / School</label>
+                                <input type="text" class="form-control" id="department" name="department"
+                                       value="{{ form_data.get('department') if form_data else (course.department if course and course.department else '') }}"
+                                       placeholder="e.g. Department of Computer Science">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="credits" class="form-label">Credits</label>
+                                <input type="number" class="form-control" id="credits" name="credits" min="1" max="10"
+                                       value="{{ form_data.get('credits') if form_data else (course.credits if course else 4) }}">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="Active" {% if (form_data and form_data.get('status') == 'Active') or (course and course.status == 'Active') or not course %}selected{% endif %}>Active</option>
+                                    <option value="Inactive" {% if (form_data and form_data.get('status') == 'Inactive') or (course and course.status == 'Inactive') %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="description" class="form-label">Course Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="4"
+                                          placeholder="Detailed curriculum overview, examination guidelines, and prerequisites...">{{ form_data.get('description') if form_data else (course.description if course and course.description else '') }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{{ url_for('admin.list_courses') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-lg me-1"></i> {{ 'Update Course' if course else 'Create Course' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

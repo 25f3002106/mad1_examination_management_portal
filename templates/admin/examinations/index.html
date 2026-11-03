@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Examinations - EMP Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'examinations' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">Examination Management</h2>
+                <p class="text-muted mb-0">Create, schedule, configure timelines, and assign examiners</p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin.create_examination') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Create Examination
+                </a>
+            </div>
+        </div>
+
+        <!-- Search and Filters Bar -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-3">
+                <form method="GET" action="{{ url_for('admin.list_examinations') }}" class="row g-2 align-items-center">
+                    <div class="col-md-5 col-lg-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by exam name or course code...">
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-lg-3">
+                        <select name="course_id" class="form-select">
+                            <option value="all" {% if course_filter == 'all' %}selected{% endif %}>All Courses</option>
+                            {% for c in courses %}
+                                <option value="{{ c.id }}" {% if course_filter == c.id|string %}selected{% endif %}>{{ c.code }} - {{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-lg-2">
+                        <select name="status" class="form-select">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                            <option value="Draft" {% if status_filter == 'Draft' %}selected{% endif %}>Draft</option>
+                            <option value="Slot Creation" {% if status_filter == 'Slot Creation' %}selected{% endif %}>Slot Creation</option>
+                            <option value="Booking Open" {% if status_filter == 'Booking Open' %}selected{% endif %}>Booking Open</option>
+                            <option value="Closed" {% if status_filter == 'Closed' %}selected{% endif %}>Closed</option>
+                            <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-lg-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                        {% if search_query or status_filter != 'all' or course_filter != 'all' %}
+                            <a href="{{ url_for('admin.list_examinations') }}" class="btn btn-outline-secondary" title="Reset filters">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Examinations Table -->
+        <div class="card shadow-sm">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Academic Examinations</h5>
+                <span class="badge bg-secondary">{{ examinations|length }} Examinations</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Exam Name</th>
+                                <th>Course</th>
+                                <th>Type</th>
+                                <th>Duration / Marks</th>
+                                <th>Examiners</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in examinations %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('admin.view_examination', exam_id=exam.id) }}" class="fw-bold text-decoration-none">
+                                            {{ exam.name }}
+                                        </a>
+                                        <div class="small text-muted">ID: EXAM-{{ exam.id }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">{{ exam.course.code }}</span>
+                                        <small class="d-block text-muted">{{ exam.course.name }}</small>
+                                    </td>
+                                    <td><span class="badge bg-info bg-opacity-10 text-info border border-info">{{ exam.exam_type }}</span></td>
+                                    <td>
+                                        <div>{{ exam.duration }} mins</div>
+                                        <small class="text-muted">{{ exam.max_marks }} marks</small>
+                                    </td>
+                                    <td>
+                                        {% if exam.examiners %}
+                                            <span class="badge bg-primary">{{ exam.examiners|length }} Assigned</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if exam.status == 'Draft' %}
+                                            <span class="badge bg-secondary">Draft</span>
+                                        {% elif exam.status == 'Slot Creation' %}
+                                            <span class="badge bg-info text-white">Slot Creation</span>
+                                        {% elif exam.status == 'Booking Open' %}
+                                            <span class="badge bg-success">Booking Open</span>
+                                        {% elif exam.status == 'Closed' %}
+                                            <span class="badge bg-warning text-dark">Closed</span>
+                                        {% else %}
+                                            <span class="badge bg-dark">Completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('admin.view_examination', exam_id=exam.id) }}" class="btn btn-outline-primary" title="View & Configure">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.edit_examination', exam_id=exam.id) }}" class="btn btn-outline-secondary" title="Edit Exam">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form action="{{ url_for('admin.delete_examination', exam_id=exam.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete examination {{ exam.name }}?');">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete Exam" {% if exam.total_bookings_count > 0 %}disabled{% endif %}>
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+                                        No examinations found. <a href="{{ url_for('admin.create_examination') }}">Create an examination</a>.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
