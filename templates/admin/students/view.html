@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Profile - {{ student.user.name }} - EMP Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'students' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_students') }}">Students</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ student.roll_number }}</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-bold mb-1">{{ student.user.name }}</h2>
+                <span class="badge bg-primary me-1">Roll No: {{ student.roll_number }}</span>
+                <span class="badge bg-light text-dark border">ID: STU-{{ student.id }}</span>
+            </div>
+            <div>
+                <a href="{{ url_for('admin.list_students') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Students
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Student Information Overview -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-mortarboard-fill text-primary me-2"></i>Academic Profile Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Full Name:</span>
+                                <strong>{{ student.user.name }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Roll Number:</span>
+                                <strong class="text-primary">{{ student.roll_number }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Email:</span>
+                                <strong>{{ student.user.email }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Program:</span>
+                                <strong>{{ student.program }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Department:</span>
+                                <strong>{{ student.department or 'N/A' }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Contact:</span>
+                                <strong>{{ student.contact_number or 'N/A' }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Account Status:</span>
+                                <span class="badge bg-{{ 'success' if student.user.account_status == 'active' else 'danger' }}">
+                                    {{ student.user.account_status|upper }}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Enrolled On:</span>
+                                <small>{{ student.user.created_at.strftime('%Y-%m-%d %H:%M') if student.user.created_at else 'N/A' }}</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Examination Bookings History -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-ticket-perforated text-primary me-2"></i>Examination Bookings History</h6>
+                        <span class="badge bg-secondary">{{ student.bookings|length }} Bookings</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Examination</th>
+                                        <th>Slot Window</th>
+                                        <th>Status</th>
+                                        <th>Attendance</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in student.bookings %}
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">{{ booking.slot.examination.name }}</div>
+                                                <small class="text-muted">{{ booking.slot.examination.course.code }}</small>
+                                            </td>
+                                            <td>
+                                                <div>{{ booking.slot.start_time.strftime('%Y-%m-%d %H:%M') }}</div>
+                                                <small class="text-muted">{{ booking.slot.room_or_link or 'TBA' }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'danger' }}">
+                                                    {{ booking.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if booking.attendance == 'present' else ('warning text-dark' if booking.attendance == 'pending' else 'danger') }}">
+                                                    {{ booking.attendance|upper }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if booking.score is not None %}
+                                                    <strong class="text-primary">{{ booking.score }} / {{ booking.slot.examination.max_marks }}</strong>
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                No examination slots booked by this student yet.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Examiner Profile - {{ examiner.user.name }} - EMP Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'examiners' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_examiners') }}">Examiners</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ examiner.user.name }}</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-bold mb-1">{{ examiner.user.name }}</h2>
+                <span class="badge bg-light text-dark border">ID: EX-{{ examiner.id }}</span>
+            </div>
+            <div class="d-flex gap-2">
+                {% if examiner.approval_status == 'pending' %}
+                    <form action="{{ url_for('admin.approve_examiner', examiner_id=examiner.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="bi bi-check-lg me-1"></i> Approve Examiner
+                        </button>
+                    </form>
+                    <form action="{{ url_for('admin.deactivate_examiner', examiner_id=examiner.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-x-lg me-1"></i> Reject Application
+                        </button>
+                    </form>
+                {% elif examiner.approval_status == 'approved' %}
+                    <form action="{{ url_for('admin.deactivate_examiner', examiner_id=examiner.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this examiner?');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-lock me-1"></i> Deactivate Examiner
+                        </button>
+                    </form>
+                {% else %}
+                    <form action="{{ url_for('admin.reactivate_examiner', examiner_id=examiner.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Reactivate Examiner
+                        </button>
+                    </form>
+                {% endif %}
+                <a href="{{ url_for('admin.list_examiners') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Examiner Profile Overview -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-person-lines-fill text-primary me-2"></i>Examiner Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Full Name:</span>
+                                <strong>{{ examiner.user.name }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Official Email:</span>
+                                <strong>{{ examiner.user.email }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Department:</span>
+                                <strong>{{ examiner.department }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Contact Info:</span>
+                                <strong>{{ examiner.contact_information }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Approval Status:</span>
+                                <span>
+                                    {% if examiner.approval_status == 'approved' %}
+                                        <span class="badge bg-success">Approved (Active)</span>
+                                    {% elif examiner.approval_status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending Review</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Deactivated</span>
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span class="text-muted">Registered On:</span>
+                                <small>{{ examiner.user.created_at.strftime('%Y-%m-%d %H:%M') if examiner.user.created_at else 'N/A' }}</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assigned Examinations -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-calendar2-check text-primary me-2"></i>Assigned Examinations</h6>
+                        <span class="badge bg-primary">{{ examiner.assigned_examinations|length }} Examinations</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Examination</th>
+                                        <th>Course</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Manage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exam in examiner.assigned_examinations %}
+                                        <tr>
+                                            <td class="fw-semibold">{{ exam.name }}</td>
+                                            <td><span class="badge bg-light text-dark border">{{ exam.course.code }}</span></td>
+                                            <td><small>{{ exam.exam_type }}</small></td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if exam.status == 'Booking Open' else ('info' if exam.status == 'Slot Creation' else 'secondary') }}">
+                                                    {{ exam.status }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <a href="{{ url_for('admin.view_examination', exam_id=exam.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                This examiner has not been assigned to any examinations yet.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
