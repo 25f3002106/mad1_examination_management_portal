@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if action == 'edit' %}Edit Slot{% else %}Create Slot{% endif %} - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'examiner/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    {% if action == 'edit' %}Edit Slot{% else %}Create New Slot{% endif %}
+                </h2>
+                <p class="text-muted mb-0">{{ exam.name }} &mdash; {{ exam.course.name }}</p>
+            </div>
+            <a href="{{ url_for('examiner.examination_view', exam_id=exam.id) }}"
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Examination
+            </a>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header py-3">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-calendar-plus text-primary me-2"></i>
+                            Slot Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-4 small">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Exam Duration:</strong> {{ exam.duration }} minutes &mdash;
+                            Slot duration must be at least <strong>{{ exam.duration }} minutes</strong>.
+                        </div>
+
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="date" class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+                                <input type="date" id="date" name="date" class="form-control"
+                                       value="{{ form_data.get('date', '') }}" required>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="start_time" class="form-label fw-semibold">Start Time <span class="text-danger">*</span></label>
+                                    <input type="time" id="start_time" name="start_time" class="form-control"
+                                           value="{{ form_data.get('start_time', '') }}" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="end_time" class="form-label fw-semibold">End Time <span class="text-danger">*</span></label>
+                                    <input type="time" id="end_time" name="end_time" class="form-control"
+                                           value="{{ form_data.get('end_time', '') }}" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="capacity" class="form-label fw-semibold">Maximum Student Capacity <span class="text-danger">*</span></label>
+                                <input type="number" id="capacity" name="capacity" class="form-control"
+                                       value="{{ form_data.get('capacity', 1) }}" min="1" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="room_or_link" class="form-label fw-semibold">Venue / Online Link</label>
+                                <input type="text" id="room_or_link" name="room_or_link" class="form-control"
+                                       value="{{ form_data.get('room_or_link', '') }}"
+                                       placeholder="e.g., Room 201 or https://meet.link">
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check2 me-1"></i>
+                                    {% if action == 'edit' %}Update Slot{% else %}Create Slot{% endif %}
+                                </button>
+                                <a href="{{ url_for('examiner.examination_view', exam_id=exam.id) }}"
+                                   class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exam.name }} - Examiner View - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'examiner/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">{{ exam.name }}</h2>
+                <p class="text-muted mb-0">{{ exam.course.code }} &mdash; {{ exam.course.name }}</p>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge
+                    {% if exam.status == 'Slot Creation' %}bg-info
+                    {% elif exam.status == 'Booking Open' %}bg-success
+                    {% elif exam.status == 'Completed' %}bg-secondary
+                    {% elif exam.status == 'Closed' %}bg-dark
+                    {% else %}bg-warning text-dark{% endif %} px-3 py-2">
+                    {{ exam.status }}
+                </span>
+                <a href="{{ url_for('examiner.examinations') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        {# Examination Details #}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>Examination Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">TYPE</span>
+                        <strong>{{ exam.exam_type }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">DURATION</span>
+                        <strong>{{ exam.duration }} minutes</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">MAX MARKS</span>
+                        <strong>{{ exam.max_marks }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">TOTAL BOOKINGS</span>
+                        <strong>{{ exam.total_bookings_count }}</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small d-block">SLOT CREATION PERIOD</span>
+                        <strong>
+                            {% if exam.slot_creation_start_date %}
+                                {{ exam.slot_creation_start_date.strftime('%d %b %Y %H:%M') }} &mdash;
+                                {{ exam.slot_creation_end_date.strftime('%d %b %Y %H:%M') if exam.slot_creation_end_date else 'Open-ended' }}
+                            {% else %}Not configured{% endif %}
+                        </strong>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small d-block">BOOKING PERIOD</span>
+                        <strong>
+                            {% if exam.slot_booking_start_date %}
+                                {{ exam.slot_booking_start_date.strftime('%d %b %Y %H:%M') }} &mdash;
+                                {{ exam.slot_booking_end_date.strftime('%d %b %Y %H:%M') if exam.slot_booking_end_date else 'Open-ended' }}
+                            {% else %}Not configured{% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Rubric Criteria #}
+        {% if exam.rubrics %}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-list-check text-primary me-2"></i>Rubric Criteria</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Criterion</th>
+                                <th>Max Marks</th>
+                                <th>Weightage</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in exam.rubrics %}
+                            <tr>
+                                <td>{{ r.criterion_name }}</td>
+                                <td>{{ r.max_marks }}</td>
+                                <td>{{ r.weightage }}</td>
+                                <td class="text-muted small">{{ r.description or '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Slots Section #}
+        <div class="card shadow-sm">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-calendar2-week text-primary me-2"></i>My Slots</h5>
+                {% if can_create %}
+                <a href="{{ url_for('examiner.slot_create', exam_id=exam.id) }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Create Slot
+                </a>
+                {% else %}
+                <span class="text-muted small">Slot creation is not currently open.</span>
+                {% endif %}
+            </div>
+
+            <div class="card-body p-0">
+                {% if slots %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Capacity</th>
+                                <th>Booked</th>
+                                <th>Available</th>
+                                <th>Venue / Link</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in slots %}
+                            <tr>
+                                <td>{{ slot.start_time.strftime('%d %b %Y') }}</td>
+                                <td>{{ slot.start_time.strftime('%H:%M') }}</td>
+                                <td>{{ slot.end_time.strftime('%H:%M') }}</td>
+                                <td>{{ slot.capacity }}</td>
+                                <td>{{ slot.booked_count }}</td>
+                                <td>{{ slot.available_seats }}</td>
+                                <td class="text-muted small">{{ slot.room_or_link or '—' }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if slot.status == 'Available' %}bg-success
+                                        {% elif slot.status == 'Full' %}bg-warning text-dark
+                                        {% elif slot.status == 'Cancelled' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ slot.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('examiner.slot_students', slot_id=slot.id) }}"
+                                       class="btn btn-sm btn-outline-info me-1">
+                                        <i class="bi bi-people"></i>
+                                    </a>
+                                    {% if not booking_started and slot.booked_count == 0 and slot.status != 'Cancelled' %}
+                                    <a href="{{ url_for('examiner.slot_edit', slot_id=slot.id) }}"
+                                       class="btn btn-sm btn-outline-warning me-1">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="POST"
+                                          action="{{ url_for('examiner.slot_cancel', slot_id=slot.id) }}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Cancel this slot?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-muted text-center">
+                    <i class="bi bi-calendar-x fs-3 d-block mb-2"></i>
+                    No slots created for this examination yet.
+                    {% if can_create %}
+                    <a href="{{ url_for('examiner.slot_create', exam_id=exam.id) }}" class="btn btn-sm btn-primary mt-2">
+                        Create First Slot
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

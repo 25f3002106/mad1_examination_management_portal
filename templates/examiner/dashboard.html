@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Examiner Dashboard - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'examiner/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Welcome, {{ user.name }}</h2>
+                <p class="text-muted mb-0">Examiner Dashboard &mdash; {{ examiner.department }}</p>
+            </div>
+            <span class="badge bg-primary px-3 py-2">
+                <i class="bi bi-building me-1"></i> {{ examiner.department }}
+            </span>
+        </div>
+
+        {# Stats Row #}
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-primary">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">ASSIGNED EXAMINATIONS</span>
+                        <i class="bi bi-journal-check text-primary fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ assigned_exams_count }}</h3>
+                    <a href="{{ url_for('examiner.examinations') }}" class="small text-primary">View all &rarr;</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-info">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">SLOTS CREATED</span>
+                        <i class="bi bi-calendar2-check text-info fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ slots_created }}</h3>
+                    <p class="text-muted small mb-0">Total examination slots</p>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-secondary">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">STUDENTS BOOKED</span>
+                        <i class="bi bi-people text-secondary fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ students_booked }}</h3>
+                    <a href="{{ url_for('examiner.students') }}" class="small text-secondary">View students &rarr;</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-6">
+                <div class="card p-3 h-100 border-start border-4 border-warning">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">PENDING EVALUATIONS</span>
+                        <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ pending_evaluations }}</h3>
+                    <a href="{{ url_for('examiner.evaluations') }}" class="small text-warning">Go to evaluations &rarr;</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-6">
+                <div class="card p-3 h-100 border-start border-4 border-success">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">COMPLETED EVALUATIONS</span>
+                        <i class="bi bi-award text-success fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ completed_evaluations }}</h3>
+                    <p class="text-muted small mb-0">Submitted evaluations</p>
+                </div>
+            </div>
+        </div>
+
+        {# Profile Card #}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-person-badge text-primary me-2"></i>Examiner Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">EXAMINER ID</span>
+                        <strong>EX-{{ examiner.id }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">EMAIL</span>
+                        <strong>{{ user.email }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">DEPARTMENT</span>
+                        <strong>{{ examiner.department }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">CONTACT</span>
+                        <strong>{{ examiner.contact_information }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Active Examinations Quick View #}
+        {% if assigned_exams %}
+        <div class="card shadow-sm">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-clipboard2-check text-primary me-2"></i>Assigned Examinations</h5>
+                <a href="{{ url_for('examiner.examinations') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Examination</th>
+                                <th>Course</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in assigned_exams[:5] %}
+                            <tr>
+                                <td class="fw-semibold">{{ exam.name }}</td>
+                                <td>{{ exam.course.name }}</td>
+                                <td>{{ exam.exam_type }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if exam.status == 'Slot Creation' %}bg-info
+                                        {% elif exam.status == 'Booking Open' %}bg-success
+                                        {% elif exam.status == 'Completed' %}bg-secondary
+                                        {% elif exam.status == 'Closed' %}bg-dark
+                                        {% else %}bg-warning text-dark{% endif %}">
+                                        {{ exam.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('examiner.examination_view', exam_id=exam.id) }}"
+                                       class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

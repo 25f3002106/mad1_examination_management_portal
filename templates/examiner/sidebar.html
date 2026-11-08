@@ -1,0 +1,39 @@
+{# Examiner sidebar partial — include in examiner pages #}
+<aside class="dashboard-sidebar">
+    <div class="sidebar-title">Examiner Portal</div>
+    <ul class="sidebar-nav mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'examiner.dashboard' %}active{% endif %}"
+               href="{{ url_for('examiner.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'examiner.examination' in request.endpoint %}active{% endif %}"
+               href="{{ url_for('examiner.examinations') }}">
+                <i class="bi bi-journal-check"></i> My Examinations
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'examiner.students' %}active{% endif %}"
+               href="{{ url_for('examiner.students') }}">
+                <i class="bi bi-people"></i> Booked Students
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'examiner.evaluations' %}active{% endif %}"
+               href="{{ url_for('examiner.evaluations') }}">
+                <i class="bi bi-check2-square"></i> Evaluations
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-title mt-auto">Status</div>
+    <div class="p-3 bg-light rounded small border">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="bi bi-patch-check-fill text-success fs-5"></i>
+            <span class="fw-bold text-success">Verified Examiner</span>
+        </div>
+        <div class="text-muted small">Dept: {{ examiner.department if examiner else 'N/A' }}</div>
+    </div>
+</aside>

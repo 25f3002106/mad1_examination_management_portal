@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}My Examinations - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'examiner/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">My Examinations</h2>
+                <p class="text-muted mb-0">Examinations assigned to you by the administrator.</p>
+            </div>
+        </div>
+
+        {% if examinations %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Examination</th>
+                                <th>Course</th>
+                                <th>Type</th>
+                                <th>Max Marks</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Slot Creation</th>
+                                <th>Booking Period</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in examinations %}
+                            <tr>
+                                <td class="text-muted small">{{ loop.index }}</td>
+                                <td class="fw-semibold">{{ exam.name }}</td>
+                                <td>{{ exam.course.code }} &mdash; {{ exam.course.name }}</td>
+                                <td>{{ exam.exam_type }}</td>
+                                <td>{{ exam.max_marks }}</td>
+                                <td>{{ exam.duration }} min</td>
+                                <td>
+                                    <span class="badge
+                                        {% if exam.status == 'Slot Creation' %}bg-info
+                                        {% elif exam.status == 'Booking Open' %}bg-success
+                                        {% elif exam.status == 'Completed' %}bg-secondary
+                                        {% elif exam.status == 'Closed' %}bg-dark
+                                        {% else %}bg-warning text-dark{% endif %}">
+                                        {{ exam.status }}
+                                    </span>
+                                </td>
+                                <td class="small">
+                                    {% if exam.slot_creation_start_date %}
+                                        {{ exam.slot_creation_start_date.strftime('%d %b %Y') }} &mdash;
+                                        {{ exam.slot_creation_end_date.strftime('%d %b %Y') if exam.slot_creation_end_date else '—' }}
+                                    {% else %}&mdash;{% endif %}
+                                </td>
+                                <td class="small">
+                                    {% if exam.slot_booking_start_date %}
+                                        {{ exam.slot_booking_start_date.strftime('%d %b %Y') }} &mdash;
+                                        {{ exam.slot_booking_end_date.strftime('%d %b %Y') if exam.slot_booking_end_date else '—' }}
+                                    {% else %}&mdash;{% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('examiner.examination_view', exam_id=exam.id) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No examinations have been assigned to you yet. Please contact the administrator.
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
