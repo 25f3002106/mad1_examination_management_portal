@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Evaluation History - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'examiner/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Evaluation History</h2>
+                <p class="text-muted mb-0">Track submitted and pending student evaluations.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge bg-warning text-dark px-3 py-2">{{ pending | length }} Pending</span>
+                <span class="badge bg-success px-3 py-2">{{ evaluated | length }} Completed</span>
+            </div>
+        </div>
+
+        {# Pending Evaluations #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3 bg-warning bg-opacity-10">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-hourglass-split text-warning me-2"></i>Pending Evaluations
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if pending %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Roll No</th>
+                                <th>Examination</th>
+                                <th>Slot Date</th>
+                                <th>Attendance</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in pending %}
+                            <tr>
+                                <td class="fw-semibold">{{ booking.student.user.name }}</td>
+                                <td>{{ booking.student.roll_number }}</td>
+                                <td>{{ booking.slot.examination.name }}</td>
+                                <td>{{ booking.slot.start_time.strftime('%d %b %Y, %H:%M') }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if booking.attendance == 'present' %}bg-success
+                                        {% elif booking.attendance == 'absent' %}bg-danger
+                                        {% else %}bg-warning text-dark{% endif %}">
+                                        {{ booking.attendance | capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if booking.slot.examination.rubrics %}
+                                    <a href="{{ url_for('examiner.evaluate', booking_id=booking.id) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-square me-1"></i>Evaluate
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">No rubric</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-check-all fs-3 d-block mb-2 text-success"></i>
+                    All evaluations are complete!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Completed Evaluations #}
+        <div class="card shadow-sm">
+            <div class="card-header py-3 bg-success bg-opacity-10">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-award text-success me-2"></i>Submitted Evaluations
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if evaluated %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student</th>
+                                <th>Roll No</th>
+                                <th>Examination</th>
+                                <th>Slot Date</th>
+                                <th>Total Marks</th>
+                                <th>Max Marks</th>
+                                <th>Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in evaluated %}
+                            <tr>
+                                <td class="fw-semibold">{{ booking.student.user.name }}</td>
+                                <td>{{ booking.student.roll_number }}</td>
+                                <td>{{ booking.slot.examination.name }}</td>
+                                <td>{{ booking.slot.start_time.strftime('%d %b %Y, %H:%M') }}</td>
+                                <td class="fw-bold text-success">{{ booking.evaluation.total_marks }}</td>
+                                <td>{{ booking.slot.examination.max_marks }}</td>
+                                <td class="text-muted small">{{ booking.evaluation.remarks or '—' }}</td>
+                                <td>
+                                    <a href="{{ url_for('examiner.evaluate', booking_id=booking.id) }}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil me-1"></i>Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-clipboard-x fs-3 d-block mb-2"></i>
+                    No evaluations submitted yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

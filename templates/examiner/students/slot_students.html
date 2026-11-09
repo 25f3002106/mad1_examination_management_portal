@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Students in Slot - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'examiner/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Students in Slot</h2>
+                <p class="text-muted mb-0">
+                    {{ slot.examination.name }} &mdash;
+                    {{ slot.start_time.strftime('%d %b %Y, %H:%M') }} &ndash; {{ slot.end_time.strftime('%H:%M') }}
+                </p>
+            </div>
+            <a href="{{ url_for('examiner.examination_view', exam_id=slot.examination.id) }}"
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Examination
+            </a>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 border-start border-4 border-primary">
+                    <span class="text-muted small">CAPACITY</span>
+                    <h4 class="fw-bold mb-0">{{ slot.capacity }}</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 border-start border-4 border-success">
+                    <span class="text-muted small">BOOKED</span>
+                    <h4 class="fw-bold mb-0">{{ slot.booked_count }}</h4>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 border-start border-4 border-info">
+                    <span class="text-muted small">AVAILABLE SEATS</span>
+                    <h4 class="fw-bold mb-0">{{ slot.available_seats }}</h4>
+                </div>
+            </div>
+        </div>
+
+        {% if bookings %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Roll Number</th>
+                                <th>Program</th>
+                                <th>Attendance</th>
+                                <th>Evaluation</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td class="fw-semibold">{{ booking.student.user.name }}</td>
+                                <td>{{ booking.student.roll_number }}</td>
+                                <td>{{ booking.student.program }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if booking.attendance == 'present' %}bg-success
+                                        {% elif booking.attendance == 'absent' %}bg-danger
+                                        {% else %}bg-warning text-dark{% endif %}">
+                                        {{ booking.attendance | capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if booking.evaluation and booking.evaluation.status == 'submitted' %}
+                                        <span class="badge bg-success">Done ({{ booking.score }})</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if slot.examination.rubrics %}
+                                    <a href="{{ url_for('examiner.evaluate', booking_id=booking.id) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        {% if booking.evaluation and booking.evaluation.status == 'submitted' %}
+                                            Edit Evaluation
+                                        {% else %}
+                                            Evaluate
+                                        {% endif %}
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No students are booked in this slot.
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

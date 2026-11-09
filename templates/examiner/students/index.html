@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Booked Students - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'examiner/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Booked Students</h2>
+                <p class="text-muted mb-0">All students confirmed in your examination slots.</p>
+            </div>
+        </div>
+
+        {% if bookings %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Roll Number</th>
+                                <th>Examination</th>
+                                <th>Slot Date</th>
+                                <th>Start Time</th>
+                                <th>Booking Status</th>
+                                <th>Attendance</th>
+                                <th>Evaluation</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td class="fw-semibold">{{ booking.student.user.name }}</td>
+                                <td>{{ booking.student.roll_number }}</td>
+                                <td>{{ booking.slot.examination.name }}</td>
+                                <td>{{ booking.slot.start_time.strftime('%d %b %Y') }}</td>
+                                <td>{{ booking.slot.start_time.strftime('%H:%M') }}</td>
+                                <td>
+                                    <span class="badge {% if booking.status == 'confirmed' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ booking.status | capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge
+                                        {% if booking.attendance == 'present' %}bg-success
+                                        {% elif booking.attendance == 'absent' %}bg-danger
+                                        {% else %}bg-warning text-dark{% endif %}">
+                                        {{ booking.attendance | capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if booking.evaluation and booking.evaluation.status == 'submitted' %}
+                                        <span class="badge bg-success">Submitted ({{ booking.score }})</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if booking.slot.examination.rubrics %}
+                                    <a href="{{ url_for('examiner.evaluate', booking_id=booking.id) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil-square"></i>
+                                        {% if booking.evaluation and booking.evaluation.status == 'submitted' %}
+                                            Edit
+                                        {% else %}
+                                            Evaluate
+                                        {% endif %}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">No rubric</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No students have booked your examination slots yet.
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
