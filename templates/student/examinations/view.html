@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exam.name }} - Details & Slots - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'student/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">{{ exam.name }}</h2>
+                <p class="text-muted mb-0">{{ exam.course.code }} &mdash; {{ exam.course.name }}</p>
+            </div>
+            <div>
+                <a href="{{ url_for('student.examinations') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Examinations
+                </a>
+            </div>
+        </div>
+
+        {% if existing_active_booking %}
+        <div class="alert alert-warning border-warning shadow-sm mb-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                    <strong>You already have an active booking for this examination:</strong>
+                    Slot on {{ existing_active_booking.slot.start_time.strftime('%d %b %Y at %H:%M') }}.
+                </div>
+                <a href="{{ url_for('student.booking_view', booking_id=existing_active_booking.id) }}" class="btn btn-warning btn-sm">
+                    View My Booking Receipt
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Examination Specification Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3 bg-light">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>Examination Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">EXAMINATION TYPE</span>
+                        <strong class="fs-6">{{ exam.exam_type }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">DURATION</span>
+                        <strong class="fs-6">{{ exam.duration }} Minutes</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">MAXIMUM MARKS</span>
+                        <strong class="fs-6">{{ exam.max_marks }} Marks</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">STATUS</span>
+                        <span class="badge {% if is_bookable %}bg-success{% else %}bg-secondary{% endif %} px-2 py-1">
+                            {{ exam.status }}
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small d-block">SLOT BOOKING WINDOW</span>
+                        <strong>
+                            {% if exam.slot_booking_start_date %}
+                                {{ exam.slot_booking_start_date.strftime('%d %b %Y, %H:%M') }} &mdash;
+                                {{ exam.slot_booking_end_date.strftime('%d %b %Y, %H:%M UTC') if exam.slot_booking_end_date else 'Open' }}
+                            {% else %}
+                                Not set
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small d-block">ASSIGNED EXAMINERS</span>
+                        <strong>
+                            {% if exam.examiners %}
+                                {{ exam.examiners | map(attribute='user.name') | join(', ') }}
+                            {% else %}
+                                Faculty Panel
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rubric Criteria Overview -->
+        {% if exam.rubrics %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3 bg-light">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-list-check text-primary me-2"></i>Grading Rubric Criteria</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Criterion Name</th>
+                                <th>Max Marks</th>
+                                <th>Weightage</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in exam.rubrics %}
+                            <tr>
+                                <td class="fw-semibold">{{ r.criterion_name }}</td>
+                                <td>{{ r.max_marks }}</td>
+                                <td>{{ r.weightage }}x</td>
+                                <td class="text-muted small">{{ r.description or 'Evaluated based on rubrics criteria' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Available Slots List -->
+        <div class="card shadow-sm">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-calendar2-range text-primary me-2"></i>Examination Slots</h5>
+                {% if not is_bookable %}
+                <span class="badge bg-warning text-dark">Booking Closed or Outside Authorized Period</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if slots %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Time Window</th>
+                                <th>Examiner</th>
+                                <th>Capacity</th>
+                                <th>Available Seats</th>
+                                <th>Venue / Link</th>
+                                <th>Slot Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in slots %}
+                            {% set is_past = slot.start_time <= now %}
+                            {% set is_slot_available = slot.status == 'Available' and slot.available_seats > 0 and not is_past %}
+                            <tr class="{% if is_past or slot.status != 'Available' %}text-muted bg-light{% endif %}">
+                                <td class="fw-semibold">{{ slot.start_time.strftime('%d %b %Y') }}</td>
+                                <td>{{ slot.start_time.strftime('%H:%M') }} &ndash; {{ slot.end_time.strftime('%H:%M UTC') }}</td>
+                                <td>
+                                    {% if slot.examiner and slot.examiner.user %}
+                                        {{ slot.examiner.user.name }}
+                                        <div class="text-muted small">{{ slot.examiner.department }}</div>
+                                    {% else %}
+                                        Faculty Panel
+                                    {% endif %}
+                                </td>
+                                <td>{{ slot.capacity }}</td>
+                                <td>
+                                    <span class="badge {% if slot.available_seats > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ slot.available_seats }} seats left
+                                    </span>
+                                </td>
+                                <td class="small">{{ slot.room_or_link or 'Online / TBA' }}</td>
+                                <td>
+                                    {% if is_past %}
+                                        <span class="badge bg-secondary">Past Slot</span>
+                                    {% elif slot.status == 'Available' and slot.available_seats > 0 %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% elif slot.status == 'Full' or slot.available_seats == 0 %}
+                                        <span class="badge bg-danger">Full</span>
+                                    {% elif slot.status == 'Cancelled' %}
+                                        <span class="badge bg-dark">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ slot.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if existing_active_booking %}
+                                        {% if existing_active_booking.slot_id == slot.id %}
+                                            <span class="badge bg-primary">Your Booked Slot</span>
+                                        {% else %}
+                                            <span class="text-muted small">Already Booked</span>
+                                        {% endif %}
+                                    {% elif not is_bookable %}
+                                        <button class="btn btn-sm btn-secondary" disabled>Booking Closed</button>
+                                    {% elif not is_slot_available %}
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>Unavailable</button>
+                                    {% else %}
+                                        <form method="POST" action="{{ url_for('student.slot_book', slot_id=slot.id) }}"
+                                              onsubmit="return confirm('Confirm booking this slot on {{ slot.start_time.strftime('%d %b %Y at %H:%M') }}?')">
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-calendar-check me-1"></i>Book Slot
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-calendar2-x fs-3 d-block mb-2"></i>
+                    No examination slots have been scheduled by examiners yet for this examination.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

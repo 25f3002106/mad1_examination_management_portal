@@ -1,0 +1,49 @@
+{# Student portal sidebar partial navigation #}
+<aside class="dashboard-sidebar">
+    <div class="sidebar-title">Student Portal</div>
+    <ul class="sidebar-nav mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}"
+               href="{{ url_for('student.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard Overview
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'student.examination' in request.endpoint %}active{% endif %}"
+               href="{{ url_for('student.examinations') }}">
+                <i class="bi bi-journal-bookmark"></i> Browse Examinations
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'student.booking' in request.endpoint %}active{% endif %}"
+               href="{{ url_for('student.bookings') }}">
+                <i class="bi bi-calendar2-check"></i> My Bookings
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'student.history' %}active{% endif %}"
+               href="{{ url_for('student.history') }}">
+                <i class="bi bi-clock-history"></i> Examination History
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'student.result' in request.endpoint %}active{% endif %}"
+               href="{{ url_for('student.results') }}">
+                <i class="bi bi-trophy"></i> Results & Feedback
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'student.profile' %}active{% endif %}"
+               href="{{ url_for('student.profile') }}">
+                <i class="bi bi-person-badge"></i> Profile Management
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-title mt-auto">Academic Info</div>
+    <div class="p-3 bg-light rounded small border">
+        <div class="fw-bold text-primary">{{ student.program if student else 'IITM Program' }}</div>
+        <div class="text-muted small">Roll: {{ student.roll_number if student else 'N/A' }}</div>
+        <div class="text-muted small">Dept: {{ student.department if (student and student.department) else 'General' }}</div>
+    </div>
+</aside>

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'student/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Welcome, {{ user.name }}</h2>
+                <p class="text-muted mb-0">Student Academic Dashboard &amp; Examination Portal</p>
+            </div>
+            <div>
+                <a href="{{ url_for('student.examinations') }}" class="btn btn-primary btn-sm px-3 shadow-sm">
+                    <i class="bi bi-search me-1"></i> Browse &amp; Book Exams
+                </a>
+            </div>
+        </div>
+
+        <!-- 6 Database-Backed Metric Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-primary shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">AVAILABLE EXAMINATIONS</span>
+                        <i class="bi bi-journal-text text-primary fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ available_exams_count }}</h3>
+                    <a href="{{ url_for('student.examinations') }}" class="small text-primary">Browse exams &rarr;</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-info shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">AVAILABLE SLOTS</span>
+                        <i class="bi bi-calendar2-range text-info fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ available_slots_count }}</h3>
+                    <p class="text-muted small mb-0">Open time slots for booking</p>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-warning shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">UPCOMING EXAMINATIONS</span>
+                        <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ upcoming_exams_count }}</h3>
+                    <a href="{{ url_for('student.bookings') }}" class="small text-warning">View schedule &rarr;</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-secondary shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">MY BOOKED SLOTS</span>
+                        <i class="bi bi-bookmark-check text-secondary fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ my_booked_slots_count }}</h3>
+                    <a href="{{ url_for('student.bookings') }}" class="small text-secondary">Manage bookings &rarr;</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-success shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">PUBLISHED RESULTS</span>
+                        <i class="bi bi-trophy text-success fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ published_results_count }}</h3>
+                    <a href="{{ url_for('student.results') }}" class="small text-success">Check scorecards &rarr;</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-4">
+                <div class="card p-3 h-100 border-start border-4 border-dark shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-semibold">COMPLETED EXAMINATIONS</span>
+                        <i class="bi bi-check2-all text-dark fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ completed_exams_count }}</h3>
+                    <a href="{{ url_for('student.history') }}" class="small text-dark">View history &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Examinations Table -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event text-primary me-2"></i>My Upcoming Examinations</h5>
+                <a href="{{ url_for('student.bookings') }}" class="btn btn-sm btn-outline-primary">View All Bookings</a>
+            </div>
+            <div class="card-body p-0">
+                {% if upcoming_bookings %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Examination</th>
+                                <th>Course</th>
+                                <th>Date &amp; Time</th>
+                                <th>Venue / Link</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in upcoming_bookings %}
+                            <tr>
+                                <td class="fw-semibold">{{ b.slot.examination.name }}</td>
+                                <td>{{ b.slot.examination.course.code }} &mdash; {{ b.slot.examination.course.name }}</td>
+                                <td>
+                                    <div>{{ b.slot.start_time.strftime('%d %b %Y') }}</div>
+                                    <small class="text-muted">{{ b.slot.start_time.strftime('%H:%M') }} &ndash; {{ b.slot.end_time.strftime('%H:%M') }}</small>
+                                </td>
+                                <td class="text-muted small">{{ b.slot.room_or_link or 'TBA' }}</td>
+                                <td>
+                                    <span class="badge bg-success">{{ b.status }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('student.booking_view', booking_id=b.id) }}" class="btn btn-sm btn-outline-primary">
+                                        Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-calendar2-x fs-3 d-block mb-2 text-secondary"></i>
+                    You have no upcoming examination bookings scheduled.
+                    <div class="mt-2">
+                        <a href="{{ url_for('student.examinations') }}" class="btn btn-sm btn-primary">Browse Open Examinations</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Student Academic Profile Card -->
+        <div class="card shadow-sm">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-person-badge text-primary me-2"></i>Academic Profile Summary</h5>
+                <a href="{{ url_for('student.profile') }}" class="btn btn-sm btn-outline-secondary">Edit Profile</a>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">ROLL NUMBER</span>
+                        <strong class="fs-6 text-primary">{{ student.roll_number }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">PROGRAM</span>
+                        <strong class="fs-6">{{ student.program }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">DEPARTMENT</span>
+                        <strong class="fs-6">{{ student.department or 'General' }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="text-muted small d-block">OFFICIAL EMAIL</span>
+                        <strong class="fs-6">{{ user.email }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

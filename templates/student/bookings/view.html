@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Receipt #{{ booking.id }} - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'student/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Booking Confirmation Receipt</h2>
+                <p class="text-muted mb-0">Official Reservation Voucher for Examination Slot</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('student.bookings') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> All Bookings
+                </a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 border-top border-4 border-primary">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-patch-check-fill text-primary fs-4"></i>
+                            <div>
+                                <h5 class="mb-0 fw-bold">Reservation Voucher #{{ booking.id }}</h5>
+                                <small class="text-muted">Booked on {{ booking.booking_time.strftime('%d %b %Y at %H:%M UTC') }}</small>
+                            </div>
+                        </div>
+                        <span class="badge {% if booking.status in ('Booked', 'confirmed') %}bg-success{% elif booking.status == 'Cancelled' %}bg-danger{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                            {{ booking.status }}
+                        </span>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <!-- Student Info -->
+                        <div class="p-3 bg-light rounded mb-4 border">
+                            <h6 class="fw-bold text-primary mb-2"><i class="bi bi-person me-2"></i>Candidate Information</h6>
+                            <div class="row g-2 small">
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Candidate Name:</span>
+                                    <strong>{{ student.user.name }}</strong>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Roll Number:</span>
+                                    <strong class="text-primary">{{ student.roll_number }}</strong>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Academic Program:</span>
+                                    <strong>{{ student.program }}</strong>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Official Email:</span>
+                                    <strong>{{ student.user.email }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Examination Info -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-journal-text me-2"></i>Examination Details</h6>
+                            <table class="table table-bordered table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th class="bg-light" style="width: 35%;">Examination Name</th>
+                                        <td class="fw-bold">{{ booking.slot.examination.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Course Code &amp; Title</th>
+                                        <td>{{ booking.slot.examination.course.code }} &mdash; {{ booking.slot.examination.course.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Assessment Type</th>
+                                        <td>{{ booking.slot.examination.exam_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Duration &amp; Max Marks</th>
+                                        <td>{{ booking.slot.examination.duration }} Minutes &bull; {{ booking.slot.examination.max_marks }} Maximum Marks</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Slot & Schedule Info -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-clock me-2"></i>Slot Schedule &amp; Venue</h6>
+                            <table class="table table-bordered table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th class="bg-light" style="width: 35%;">Scheduled Date</th>
+                                        <td class="fw-bold text-primary">{{ booking.slot.start_time.strftime('%A, %d %B %Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Time Window</th>
+                                        <td class="fw-bold">{{ booking.slot.start_time.strftime('%H:%M') }} &ndash; {{ booking.slot.end_time.strftime('%H:%M UTC') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Venue / Online Link</th>
+                                        <td>{{ booking.slot.room_or_link or 'Official Online Link to be shared prior to assessment' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Assigned Examiner</th>
+                                        <td>
+                                            {% if booking.slot.examiner and booking.slot.examiner.user %}
+                                                {{ booking.slot.examiner.user.name }} ({{ booking.slot.examiner.department }})
+                                                &mdash; <small class="text-muted">{{ booking.slot.examiner.contact_information }}</small>
+                                            {% else %}
+                                                Assigned Faculty Committee
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Attendance Status</th>
+                                        <td>
+                                            <span class="badge {% if booking.attendance == 'present' %}bg-success{% elif booking.attendance == 'absent' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                                {{ booking.attendance | capitalize }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div>
+                                {% if booking.evaluation and (booking.evaluation.is_published or booking.slot.examination.results_published) %}
+                                <a href="{{ url_for('student.result_view', booking_id=booking.id) }}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-trophy me-1"></i> View Result Scorecard
+                                </a>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                {% if can_cancel %}
+                                <form method="POST" action="{{ url_for('student.booking_cancel', booking_id=booking.id) }}"
+                                      onsubmit="return confirm('Are you sure you want to cancel this booking? You can select another slot while booking remains open.')">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-x-circle me-1"></i> Cancel Booking
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('student.bookings') }}" class="btn btn-secondary btn-sm">Done</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
