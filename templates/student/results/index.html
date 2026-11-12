@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Published Results & Feedback - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'student/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Published Results &amp; Feedback</h2>
+                <p class="text-muted mb-0">Official academic scorecards released by course examiners.</p>
+            </div>
+            <div>
+                <a href="{{ url_for('student.history') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-clock-history me-1"></i> Examination History
+                </a>
+            </div>
+        </div>
+
+        {% if bookings %}
+        <div class="row g-4">
+            {% for b in bookings %}
+            {% set exam = b.slot.examination %}
+            {% set eval = b.evaluation %}
+            <div class="col-md-6 col-lg-6">
+                <div class="card shadow-sm h-100 border-0 border-top border-4 border-success">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                            <i class="bi bi-patch-check-fill me-1"></i>Published Result
+                        </span>
+                        <span class="text-muted small">ID: #{{ b.id }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="fw-bold text-dark mb-1">{{ exam.name }}</h5>
+                        <p class="text-muted small mb-3">{{ exam.course.code }} &mdash; {{ exam.course.name }}</p>
+
+                        <div class="p-3 bg-light rounded mb-3 border text-center">
+                            <span class="text-muted small d-block mb-1">TOTAL SCORE AWARDED</span>
+                            <div class="display-6 fw-bold text-success">
+                                {{ eval.total_marks }} <span class="fs-5 text-muted">/ {{ exam.max_marks }}</span>
+                            </div>
+                            <span class="badge bg-success mt-1">
+                                {{ ((eval.total_marks / exam.max_marks) * 100) | round(1) }}% Overall
+                            </span>
+                        </div>
+
+                        <div class="row g-2 small mb-3">
+                            <div class="col-6">
+                                <span class="text-muted d-block">Examiner:</span>
+                                <strong>{{ b.slot.examiner.user.name if (b.slot.examiner and b.slot.examiner.user) else 'Faculty Panel' }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block">Date of Evaluation:</span>
+                                <strong>{{ eval.evaluation_date.strftime('%d %b %Y') if eval.evaluation_date else 'Published' }}</strong>
+                            </div>
+                        </div>
+
+                        {% if eval.remarks %}
+                        <div class="alert alert-secondary p-2 small mb-0">
+                            <strong>Feedback:</strong> {{ eval.remarks }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0 pb-3">
+                        <a href="{{ url_for('student.result_view', booking_id=b.id) }}" class="btn btn-outline-success btn-sm w-100">
+                            <i class="bi bi-list-check me-1"></i> View Detailed Rubric Breakdown &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-award fs-1 text-muted d-block mb-3"></i>
+                <h4 class="fw-bold">No Published Results Available</h4>
+                <p class="text-muted mb-0">
+                    Results have not been officially published yet for your attended examinations.
+                    Scorecards will appear here once your evaluations are reviewed and published by examiners.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

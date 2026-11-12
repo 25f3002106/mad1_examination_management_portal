@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exam.name }} - Result Scorecard - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'student/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Official Result Scorecard</h2>
+                <p class="text-muted mb-0">{{ exam.name }} &mdash; {{ exam.course.code }}: {{ exam.course.name }}</p>
+            </div>
+            <div>
+                <a href="{{ url_for('student.results') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> All Results
+                </a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="card shadow-sm border-0 border-top border-4 border-success mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-award-fill text-success fs-3"></i>
+                            <div>
+                                <h5 class="mb-0 fw-bold">Performance &amp; Rubric Evaluation</h5>
+                                <small class="text-muted">Booking Reference #{{ booking.id }}</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            <i class="bi bi-check-circle-fill me-1"></i> Published Result
+                        </span>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <!-- Score Header Box -->
+                        <div class="p-4 bg-light rounded text-center border mb-4">
+                            <span class="text-muted small fw-semibold d-block text-uppercase">Total Marks Awarded</span>
+                            <div class="display-5 fw-bold text-success my-1">
+                                {{ evaluation.total_marks }} <span class="fs-4 text-muted">/ {{ exam.max_marks }}</span>
+                            </div>
+                            <div class="d-flex justify-content-center gap-3 mt-2">
+                                <span class="badge bg-primary px-3 py-2">
+                                    Percentage: {{ ((evaluation.total_marks / exam.max_marks) * 100) | round(2) }}%
+                                </span>
+                                <span class="badge bg-success px-3 py-2">
+                                    Publication Status: {{ evaluation.publication_status }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Meta Info Grid -->
+                        <div class="row g-3 small mb-4">
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">STUDENT NAME</span>
+                                <strong>{{ student.user.name }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">ROLL NUMBER</span>
+                                <strong>{{ student.roll_number }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">EXAMINER</span>
+                                <strong>{{ booking.slot.examiner.user.name if (booking.slot.examiner and booking.slot.examiner.user) else 'Faculty Panel' }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">EXAMINATION TYPE</span>
+                                <strong>{{ exam.exam_type }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Criterion-Wise Marks Breakdown Table -->
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Criterion-Wise Rubric Breakdown</h6>
+                        {% if evaluation.criterion_scores %}
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Evaluation Criterion</th>
+                                        <th>Weightage</th>
+                                        <th>Max Marks</th>
+                                        <th>Marks Awarded</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cs in evaluation.criterion_scores %}
+                                    <tr>
+                                        <td class="text-muted small">{{ loop.index }}</td>
+                                        <td>
+                                            <div class="fw-bold">{{ cs.rubric_criterion.criterion_name }}</div>
+                                            <small class="text-muted">{{ cs.rubric_criterion.description or '' }}</small>
+                                        </td>
+                                        <td>{{ cs.rubric_criterion.weightage }}x</td>
+                                        <td>{{ cs.rubric_criterion.max_marks }}</td>
+                                        <td class="fw-bold text-success">{{ cs.marks_awarded }}</td>
+                                        <td class="text-muted small">{{ cs.remarks or '&mdash;' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td colspan="3" class="text-end">Total</td>
+                                        <td>{{ exam.max_marks }}</td>
+                                        <td class="text-success">{{ evaluation.total_marks }}</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-secondary mb-4 small">
+                            Overall score recorded: {{ evaluation.total_marks }} / {{ exam.max_marks }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Examiner Remarks -->
+                        <div class="p-3 bg-light rounded border mb-4">
+                            <h6 class="fw-bold text-secondary mb-2"><i class="bi bi-chat-quote me-2"></i>Examiner General Remarks &amp; Feedback</h6>
+                            <p class="mb-0 text-dark">
+                                {{ evaluation.remarks or 'No additional remarks provided by the evaluation panel.' }}
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <small class="text-muted">Issued by IITM Examination Management Portal &bull; Verified Evaluation Record</small>
+                            <a href="{{ url_for('student.results') }}" class="btn btn-secondary btn-sm">Back to Results</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Examination History - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% include 'student/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h2 class="fw-bold mb-1">Academic Examination History</h2>
+                <p class="text-muted mb-0">Complete record of your past registrations, attendance, and evaluation status.</p>
+            </div>
+            <div>
+                <a href="{{ url_for('student.results') }}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-trophy me-1"></i> Published Results
+                </a>
+            </div>
+        </div>
+
+        {% if bookings %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Examination</th>
+                                <th>Course</th>
+                                <th>Slot Date &amp; Time</th>
+                                <th>Booking Status</th>
+                                <th>Attendance</th>
+                                <th>Evaluation Status</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            {% set is_past = b.slot.start_time <= now %}
+                            {% set has_eval = b.evaluation is not none %}
+                            {% set is_pub = has_eval and (b.evaluation.is_published or b.slot.examination.results_published) %}
+                            <tr>
+                                <td class="text-muted small">{{ loop.index }}</td>
+                                <td>
+                                    <div class="fw-bold">{{ b.slot.examination.name }}</div>
+                                    <small class="text-muted">{{ b.slot.examination.exam_type }} &bull; {{ b.slot.examination.duration }} min</small>
+                                </td>
+                                <td>
+                                    <strong>{{ b.slot.examination.course.code }}</strong>
+                                    <div class="text-muted small">{{ b.slot.examination.course.name }}</div>
+                                </td>
+                                <td>
+                                    <div>{{ b.slot.start_time.strftime('%d %b %Y') }}</div>
+                                    <small class="text-muted">{{ b.slot.start_time.strftime('%H:%M') }} &ndash; {{ b.slot.end_time.strftime('%H:%M UTC') }}</small>
+                                </td>
+                                <td>
+                                    {% if b.status in ('Booked', 'confirmed') %}
+                                        <span class="badge bg-success">{{ b.status }}</span>
+                                    {% elif b.status == 'Cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ b.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if b.attendance == 'present' %}bg-success{% elif b.attendance == 'absent' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                        {{ b.attendance | capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if b.status == 'Cancelled' %}
+                                        <span class="text-muted small">&mdash;</span>
+                                    {% elif is_pub %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Published</span>
+                                    {% elif has_eval %}
+                                        <span class="badge bg-info text-dark">Evaluated (Pending Publication)</span>
+                                    {% elif is_past or b.attendance == 'present' %}
+                                        <span class="badge bg-warning text-dark">Awaiting Evaluation</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Upcoming</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if is_pub %}
+                                        <a href="{{ url_for('student.result_view', booking_id=b.id) }}" class="btn btn-sm btn-success">
+                                            <i class="bi bi-award me-1"></i>Scorecard ({{ b.score }}/{{ b.slot.examination.max_marks }})
+                                        </a>
+                                    {% elif has_eval %}
+                                        <span class="text-muted small"><i class="bi bi-lock me-1"></i>Not Published</span>
+                                    {% else %}
+                                        <a href="{{ url_for('student.booking_view', booking_id=b.id) }}" class="btn btn-sm btn-outline-secondary">
+                                            Receipt
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info shadow-sm p-4 text-center">
+            <i class="bi bi-clock-history fs-3 d-block mb-2 text-info"></i>
+            <h5>No examination history found</h5>
+            <p class="text-muted mb-0">You have not registered for any examinations yet.</p>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
