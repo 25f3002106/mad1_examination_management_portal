@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Management - Admin - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'bookings' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">Booking Management &amp; Overview</h2>
+                <p class="text-muted mb-0">System-wide monitoring of student examination reservations, scheduling status, and administrative adjustments</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.list_slots') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-calendar2-range me-1"></i> Slots Overview
+                </a>
+            </div>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-3">
+                <form method="GET" action="{{ url_for('admin.list_bookings') }}" class="row g-2 align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control"
+                                   placeholder="Search student, roll no, exam, booking ID..." value="{{ search_query }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="course_id" class="form-select form-select-sm">
+                            <option value="all">All Courses</option>
+                            {% for c in courses %}
+                            <option value="{{ c.id }}" {% if course_filter == c.id|string %}selected{% endif %}>{{ c.code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="exam_id" class="form-select form-select-sm">
+                            <option value="all">All Examinations</option>
+                            {% for e in examinations %}
+                            <option value="{{ e.id }}" {% if exam_filter == e.id|string %}selected{% endif %}>{{ e.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="all">All Statuses</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active (Booked)</option>
+                            <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bookings Table -->
+        {% if bookings %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Student</th>
+                                <th>Examination</th>
+                                <th>Course</th>
+                                <th>Slot Schedule</th>
+                                <th>Assigned Examiner</th>
+                                <th>Booking Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            {% set exam = b.slot.examination %}
+                            {% set is_active = b.status in ('Booked', 'confirmed') %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark border">#{{ b.id }}</span>
+                                    {% if b.rescheduled_at %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle small d-block mt-1">Rescheduled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ b.student.user.name }}</div>
+                                    <small class="text-primary fw-semibold">{{ b.student.roll_number }}</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ exam.name }}</div>
+                                    <small class="text-muted">{{ exam.exam_type }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ exam.course.code }}</strong>
+                                    <div class="text-muted small text-truncate" style="max-width: 140px;">{{ exam.course.name }}</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ b.slot.start_time.strftime('%d %b %Y') }}</div>
+                                    <small class="text-muted">{{ b.slot.start_time.strftime('%H:%M') }} &ndash; {{ b.slot.end_time.strftime('%H:%M UTC') }}</small>
+                                </td>
+                                <td>
+                                    {% if b.slot.examiner and b.slot.examiner.user %}
+                                        <div class="fw-semibold">{{ b.slot.examiner.user.name }}</div>
+                                        <small class="text-muted">{{ b.slot.examiner.department }}</small>
+                                    {% else %}
+                                        <span class="text-muted small">Faculty Panel</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ b.booking_time.strftime('%d %b %Y, %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    {% if is_active %}
+                                        <span class="badge bg-success">{{ b.status }}</span>
+                                    {% elif b.status == 'Cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ b.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ url_for('admin.view_booking', booking_id=b.id) }}" class="btn btn-outline-secondary btn-sm" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if is_active %}
+                                        <a href="{{ url_for('admin.reschedule_booking', booking_id=b.id) }}" class="btn btn-outline-primary btn-sm" title="Reschedule Slot">
+                                            <i class="bi bi-arrow-repeat"></i> Reschedule
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info shadow-sm p-4 text-center">
+            <i class="bi bi-ticket-perforated fs-3 d-block mb-2 text-info"></i>
+            <h5>No bookings found</h5>
+            <p class="text-muted mb-0">No booking reservations match your search or filter criteria.</p>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

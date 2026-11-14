@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Reschedule Booking #{{ booking.id }} - Admin - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'bookings' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">Reschedule Student Booking</h2>
+                <p class="text-muted mb-0">Select an alternative available slot for {{ booking.student.user.name }} ({{ booking.student.roll_number }}) in {{ exam.name }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.view_booking', booking_id=booking.id) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Booking
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Current Booking Details -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 border-top border-4 border-warning mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-bookmark-dash text-warning me-2"></i>Current Assignment</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="text-muted small d-block">STUDENT</span>
+                            <strong class="fs-6">{{ booking.student.user.name }}</strong>
+                            <div class="text-primary small fw-semibold">{{ booking.student.roll_number }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-muted small d-block">EXAMINATION</span>
+                            <strong>{{ exam.name }}</strong>
+                            <div class="text-muted small">{{ exam.course.code }} &bull; {{ exam.duration }} mins</div>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-muted small d-block">CURRENT SLOT</span>
+                            <div class="p-2 bg-light rounded border">
+                                <div class="fw-bold text-dark">{{ current_slot.start_time.strftime('%A, %d %b %Y') }}</div>
+                                <div>{{ current_slot.start_time.strftime('%H:%M') }} &ndash; {{ current_slot.end_time.strftime('%H:%M UTC') }}</div>
+                                <small class="text-muted d-block mt-1">Examiner: {{ current_slot.examiner.user.name if (current_slot.examiner and current_slot.examiner.user) else 'Panel' }}</small>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-muted small d-block">BOOKING STATUS</span>
+                            <span class="badge bg-success">{{ booking.status }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reschedule Form & Alternative Slots Selection -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 border-top border-4 border-primary">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-calendar2-plus text-primary me-2"></i>Select New Available Slot</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        {% if available_slots %}
+                        <form method="POST" action="{{ url_for('admin.reschedule_booking', booking_id=booking.id) }}"
+                              onsubmit="return confirm('Confirm rescheduling this student booking to the selected slot?')">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Available Destination Slots <span class="text-danger">*</span></label>
+                                <p class="text-muted small">Only alternative slots for <strong>{{ exam.name }}</strong> with available seating are listed below:</p>
+
+                                <div class="list-group">
+                                    {% for slot in available_slots %}
+                                    <label class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <input class="form-check-input flex-shrink-0" type="radio" name="new_slot_id" value="{{ slot.id }}" required>
+                                            <div>
+                                                <div class="fw-bold fs-6">{{ slot.start_time.strftime('%A, %d %B %Y') }}</div>
+                                                <div class="small text-muted">
+                                                    {{ slot.start_time.strftime('%H:%M') }} &ndash; {{ slot.end_time.strftime('%H:%M UTC') }} &bull;
+                                                    Examiner: <strong>{{ slot.examiner.user.name if (slot.examiner and slot.examiner.user) else 'Faculty Panel' }}</strong>
+                                                    {% if slot.room_or_link %} &bull; Venue: {{ slot.room_or_link }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-success">{{ slot.available_seats }} / {{ slot.capacity }} seats available</span>
+                                            <div class="text-muted small mt-1">Slot #{{ slot.id }}</div>
+                                        </div>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="reason" class="form-label fw-semibold">Administrative Reason / Justification</label>
+                                <textarea name="reason" id="reason" class="form-control" rows="2"
+                                          placeholder="e.g., Student medical request, scheduling conflict, technical issue..."></textarea>
+                                <small class="text-muted">This reason will be recorded in the booking's permanent audit trail.</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <a href="{{ url_for('admin.view_booking', booking_id=booking.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check2-circle me-1"></i> Confirm Rescheduling
+                                </button>
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="alert alert-warning p-4 text-center">
+                            <i class="bi bi-exclamation-triangle fs-2 d-block mb-2 text-warning"></i>
+                            <h5 class="fw-bold">No Alternative Available Slots Found</h5>
+                            <p class="text-muted mb-0">
+                                There are currently no other open slots with available capacity for <strong>{{ exam.name }}</strong>.
+                                Examiners or administrators must first create additional slots or expand slot capacity.
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <a href="{{ url_for('admin.view_booking', booking_id=booking.id) }}" class="btn btn-secondary btn-sm">Back</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

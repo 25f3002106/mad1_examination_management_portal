@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block title %}Historical Records - Admin - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'history' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">Historical Examination Records &amp; Audit Trail</h2>
+                <p class="text-muted mb-0">Archived academic cycles, past examination slots, historical student bookings, and published evaluation results</p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge bg-secondary px-3 py-2">
+                    <i class="bi bi-archive me-1"></i> Permanent Audit Store
+                </span>
+            </div>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card p-3 border-start border-4 border-secondary shadow-sm">
+                    <span class="text-muted small fw-semibold">ARCHIVED EXAMINATIONS</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ completed_exams | length }}</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 border-start border-4 border-info shadow-sm">
+                    <span class="text-muted small fw-semibold">PAST / CANCELLED SLOTS</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ past_slots | length }}</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 border-start border-4 border-warning shadow-sm">
+                    <span class="text-muted small fw-semibold">HISTORICAL BOOKINGS</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ historical_bookings | length }}</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 border-start border-4 border-success shadow-sm">
+                    <span class="text-muted small fw-semibold">SUBMITTED EVALUATIONS</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ evaluations | length }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nav Tabs for Historical Records -->
+        <ul class="nav nav-pills mb-4" id="historyTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="exams-tab" data-bs-toggle="pill" data-bs-target="#exams-panel" type="button" role="tab">
+                    <i class="bi bi-calendar2-check me-1"></i> Completed Examinations ({{ completed_exams | length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="slots-tab" data-bs-toggle="pill" data-bs-target="#slots-panel" type="button" role="tab">
+                    <i class="bi bi-calendar2-range me-1"></i> Past Slots ({{ past_slots | length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bookings-tab" data-bs-toggle="pill" data-bs-target="#bookings-panel" type="button" role="tab">
+                    <i class="bi bi-bookmark-check me-1"></i> Historical Bookings ({{ historical_bookings | length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="evaluations-tab" data-bs-toggle="pill" data-bs-target="#evaluations-panel" type="button" role="tab">
+                    <i class="bi bi-trophy me-1"></i> Evaluations &amp; Results ({{ evaluations | length }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="historyTabContent">
+            <!-- 1. Completed Examinations Panel -->
+            <div class="tab-pane fade show active" id="exams-panel" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        {% if completed_exams %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Exam Name</th>
+                                        <th>Course</th>
+                                        <th>Type</th>
+                                        <th>Duration</th>
+                                        <th>Max Marks</th>
+                                        <th>Status</th>
+                                        <th>Results Published</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for e in completed_exams %}
+                                    <tr>
+                                        <td class="fw-bold">{{ e.name }}</td>
+                                        <td>{{ e.course.code }} &mdash; {{ e.course.name }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ e.exam_type }}</span></td>
+                                        <td>{{ e.duration }} mins</td>
+                                        <td>{{ e.max_marks }}</td>
+                                        <td><span class="badge bg-secondary">{{ e.status }}</span></td>
+                                        <td>
+                                            {% if e.results_published %}
+                                                <span class="badge bg-success">Published</span>
+                                            {% else %}
+                                                <span class="badge bg-light text-muted border">Unpublished</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('admin.view_examination', exam_id=e.id) }}" class="btn btn-sm btn-outline-primary">
+                                                View Archive
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="p-4 text-center text-muted">No completed or closed examinations on record.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Past Slots Panel -->
+            <div class="tab-pane fade" id="slots-panel" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        {% if past_slots %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Slot ID</th>
+                                        <th>Examination</th>
+                                        <th>Examiner</th>
+                                        <th>Date &amp; Time</th>
+                                        <th>Capacity</th>
+                                        <th>Booked Students</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in past_slots %}
+                                    <tr>
+                                        <td><span class="badge bg-light text-dark border">#{{ s.id }}</span></td>
+                                        <td><strong>{{ s.examination.name }}</strong> ({{ s.examination.course.code }})</td>
+                                        <td>{{ s.examiner.user.name if (s.examiner and s.examiner.user) else 'Faculty Panel' }}</td>
+                                        <td>{{ s.start_time.strftime('%d %b %Y, %H:%M') }} &ndash; {{ s.end_time.strftime('%H:%M UTC') }}</td>
+                                        <td>{{ s.capacity }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ s.booked_count }}</span></td>
+                                        <td>
+                                            <span class="badge {% if s.status == 'Cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ s.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="p-4 text-center text-muted">No past or cancelled slots on record.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Historical Bookings Panel -->
+            <div class="tab-pane fade" id="bookings-panel" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        {% if historical_bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Student</th>
+                                        <th>Examination</th>
+                                        <th>Date &amp; Slot</th>
+                                        <th>Status</th>
+                                        <th>Attendance</th>
+                                        <th>Score</th>
+                                        <th>Audit Log</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for b in historical_bookings %}
+                                    <tr>
+                                        <td><span class="badge bg-light text-dark border">#{{ b.id }}</span></td>
+                                        <td>
+                                            <div class="fw-bold">{{ b.student.user.name }}</div>
+                                            <small class="text-primary">{{ b.student.roll_number }}</small>
+                                        </td>
+                                        <td>{{ b.slot.examination.name }}</td>
+                                        <td>{{ b.slot.start_time.strftime('%d %b %Y, %H:%M') }}</td>
+                                        <td>
+                                            {% if b.status == 'Cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% elif b.status == 'Completed' %}
+                                                <span class="badge bg-secondary">Completed</span>
+                                            {% else %}
+                                                <span class="badge bg-dark">{{ b.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if b.attendance == 'present' %}bg-success{% elif b.attendance == 'absent' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                                {{ b.attendance | capitalize }}
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold">{{ b.score if b.score is not none else '&mdash;' }}</td>
+                                        <td class="small">
+                                            {% if b.history_notes %}
+                                                <span class="badge bg-info-subtle text-info border border-info-subtle" title="{{ b.history_notes }}">
+                                                    Audit Trail Available
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">&mdash;</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('admin.view_booking', booking_id=b.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="p-4 text-center text-muted">No historical bookings on record.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Evaluations and Results Panel -->
+            <div class="tab-pane fade" id="evaluations-panel" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        {% if evaluations %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Eval ID</th>
+                                        <th>Student</th>
+                                        <th>Examination</th>
+                                        <th>Evaluator</th>
+                                        <th>Total Score</th>
+                                        <th>Status</th>
+                                        <th>Publication Status</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ev in evaluations %}
+                                    <tr>
+                                        <td><span class="badge bg-light text-dark border">#{{ ev.id }}</span></td>
+                                        <td>
+                                            <div class="fw-bold">{{ ev.booking.student.user.name }}</div>
+                                            <small class="text-primary">{{ ev.booking.student.roll_number }}</small>
+                                        </td>
+                                        <td>{{ ev.booking.slot.examination.name }}</td>
+                                        <td>{{ ev.examiner.user.name if (ev.examiner and ev.examiner.user) else 'Faculty Panel' }}</td>
+                                        <td class="fw-bold text-success">{{ ev.total_marks }} / {{ ev.booking.slot.examination.max_marks }}</td>
+                                        <td><span class="badge bg-success">{{ ev.status | capitalize }}</span></td>
+                                        <td>
+                                            <span class="badge {% if ev.is_published or ev.booking.slot.examination.results_published %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {{ 'Published' if (ev.is_published or ev.booking.slot.examination.results_published) else 'Unpublished' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-muted small text-truncate" style="max-width: 200px;">
+                                            {{ ev.remarks or '&mdash;' }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="p-4 text-center text-muted">No evaluations or results recorded yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

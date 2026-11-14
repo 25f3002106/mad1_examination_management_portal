@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Examination Slots Overview - Admin - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'slots' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">Examination Slots Overview</h2>
+                <p class="text-muted mb-0">System-wide monitoring of examination time slots, capacity, allocations, and examiner assignments</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.list_examinations') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-calendar-check me-1"></i> Manage Examinations
+                </a>
+            </div>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-3">
+                <form method="GET" action="{{ url_for('admin.list_slots') }}" class="row g-2 align-items-center">
+                    <div class="col-md-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control" placeholder="Search exam, course, venue..." value="{{ search_query }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="course_id" class="form-select form-select-sm">
+                            <option value="all">All Courses</option>
+                            {% for c in courses %}
+                            <option value="{{ c.id }}" {% if course_filter == c.id|string %}selected{% endif %}>{{ c.code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="exam_id" class="form-select form-select-sm">
+                            <option value="all">All Examinations</option>
+                            {% for e in examinations %}
+                            <option value="{{ e.id }}" {% if exam_filter == e.id|string %}selected{% endif %}>{{ e.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="all">All Statuses</option>
+                            <option value="Available" {% if status_filter == 'Available' %}selected{% endif %}>Available</option>
+                            <option value="Full" {% if status_filter == 'Full' %}selected{% endif %}>Full</option>
+                            <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
+                        <a href="{{ url_for('admin.list_slots') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Slots Table -->
+        {% if slots %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Slot ID</th>
+                                <th>Examination</th>
+                                <th>Course</th>
+                                <th>Assigned Examiner</th>
+                                <th>Date &amp; Time Window</th>
+                                <th>Capacity</th>
+                                <th>Booked</th>
+                                <th>Available Seats</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in slots %}
+                            {% set is_past = s.end_time <= now %}
+                            <tr>
+                                <td><span class="badge bg-light text-dark border">#{{ s.id }}</span></td>
+                                <td>
+                                    <div class="fw-bold">{{ s.examination.name }}</div>
+                                    <small class="text-muted">{{ s.examination.exam_type }} &bull; {{ s.examination.duration }}m</small>
+                                </td>
+                                <td>
+                                    <strong>{{ s.examination.course.code }}</strong>
+                                    <div class="text-muted small text-truncate" style="max-width: 140px;">{{ s.examination.course.name }}</div>
+                                </td>
+                                <td>
+                                    {% if s.examiner and s.examiner.user %}
+                                        <div class="fw-semibold">{{ s.examiner.user.name }}</div>
+                                        <small class="text-muted">{{ s.examiner.department }}</small>
+                                    {% else %}
+                                        <span class="text-warning small"><i class="bi bi-exclamation-circle me-1"></i>Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ s.start_time.strftime('%d %b %Y') }}</div>
+                                    <small class="text-muted">{{ s.start_time.strftime('%H:%M') }} &ndash; {{ s.end_time.strftime('%H:%M UTC') }}</small>
+                                    {% if s.room_or_link %}
+                                    <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ s.room_or_link }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ s.capacity }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ s.booked_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if s.available_seats > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ s.available_seats }} left
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if s.status == 'Available' %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% elif s.status == 'Full' %}
+                                        <span class="badge bg-danger">Full</span>
+                                    {% elif s.status == 'Cancelled' %}
+                                        <span class="badge bg-dark">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ s.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                                data-bs-toggle="modal" data-bs-target="#reassignModal{{ s.id }}"
+                                                title="Reassign Examiner">
+                                            <i class="bi bi-person-gear"></i>
+                                        </button>
+                                        <a href="{{ url_for('admin.list_bookings', q=s.id|string) }}" class="btn btn-outline-secondary btn-sm"
+                                           title="View Bookings in Slot">
+                                            <i class="bi bi-people"></i>
+                                        </a>
+                                    </div>
+
+                                    <!-- Reassign Examiner Modal -->
+                                    <div class="modal fade" id="reassignModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content text-start">
+                                                <form method="POST" action="{{ url_for('admin.reassign_slot_examiner', slot_id=s.id) }}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fw-bold">Reassign Slot Examiner</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="small text-muted mb-3">
+                                                            Reassign examiner for Slot #{{ s.id }} in <strong>{{ s.examination.name }}</strong> on {{ s.start_time.strftime('%d %b %Y, %H:%M') }}.
+                                                        </p>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold small">Current Examiner:</label>
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                   value="{{ s.examiner.user.name if (s.examiner and s.examiner.user) else 'None' }}" disabled>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold small">Select New Approved Examiner <span class="text-danger">*</span></label>
+                                                            <select name="examiner_id" class="form-select form-select-sm" required>
+                                                                <option value="">Choose an approved examiner...</option>
+                                                                {% for ex in examiners %}
+                                                                <option value="{{ ex.id }}" {% if s.examiner_id == ex.id %}selected{% endif %}>
+                                                                    {{ ex.user.name }} ({{ ex.department }} - {{ ex.contact_information }})
+                                                                </option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary btn-sm">Confirm Reassignment</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info shadow-sm p-4 text-center">
+            <i class="bi bi-calendar2-x fs-3 d-block mb-2 text-info"></i>
+            <h5>No examination slots found</h5>
+            <p class="text-muted mb-0">No slots match the search query or filters.</p>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

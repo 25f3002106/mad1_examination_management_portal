@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking #{{ booking.id }} Details - Admin - EMP{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    {% set active_page = 'bookings' %}
+    {% include 'admin/sidebar.html' %}
+
+    <main class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">Booking Record #{{ booking.id }}</h2>
+                <p class="text-muted mb-0">Detailed registration voucher, candidate profile, and administrative history</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.list_bookings') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> All Bookings
+                </a>
+                {% if booking.status in ('Booked', 'confirmed') %}
+                <a href="{{ url_for('admin.reschedule_booking', booking_id=booking.id) }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i> Reschedule Slot
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <!-- Main Booking Card -->
+                <div class="card shadow-sm border-0 border-top border-4 border-primary mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0 fw-bold">Registration Summary</h5>
+                            <small class="text-muted">Created on {{ booking.booking_time.strftime('%d %b %Y, %H:%M UTC') }}</small>
+                        </div>
+                        <span class="badge {% if booking.status in ('Booked', 'confirmed') %}bg-success{% elif booking.status == 'Cancelled' %}bg-danger{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                            {{ booking.status }}
+                        </span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">STUDENT NAME</span>
+                                <strong class="fs-6">{{ booking.student.user.name }}</strong>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">ROLL NUMBER</span>
+                                <strong class="fs-6 text-primary">{{ booking.student.roll_number }}</strong>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">OFFICIAL EMAIL</span>
+                                <div>{{ booking.student.user.email }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">ACADEMIC PROGRAM</span>
+                                <div>{{ booking.student.program }} ({{ booking.student.department or 'General' }})</div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-journal-text text-primary me-2"></i>Examination &amp; Slot Information</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">EXAMINATION</span>
+                                <strong>{{ booking.slot.examination.name }}</strong>
+                                <small class="text-muted d-block">{{ booking.slot.examination.course.code }} &bull; {{ booking.slot.examination.exam_type }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">ASSIGNED EXAMINER</span>
+                                <strong>
+                                    {% if booking.slot.examiner and booking.slot.examiner.user %}
+                                        {{ booking.slot.examiner.user.name }} ({{ booking.slot.examiner.department }})
+                                    {% else %}
+                                        Unassigned Faculty Panel
+                                    {% endif %}
+                                </strong>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">SLOT DATE &amp; TIME</span>
+                                <strong class="text-primary">{{ booking.slot.start_time.strftime('%A, %d %B %Y') }}</strong>
+                                <div>{{ booking.slot.start_time.strftime('%H:%M') }} &ndash; {{ booking.slot.end_time.strftime('%H:%M UTC') }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted small d-block">VENUE / LINK</span>
+                                <div>{{ booking.slot.room_or_link or 'Online / TBA' }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Historical Audit Trail -->
+                        {% if booking.history_notes or booking.rescheduled_at %}
+                        <div class="p-3 bg-light rounded border mb-3">
+                            <h6 class="fw-bold text-secondary mb-2"><i class="bi bi-clock-history me-2"></i>Rescheduling &amp; Historical Audit Trail</h6>
+                            <pre class="mb-0 text-dark small" style="white-space: pre-wrap; font-family: inherit;">{{ booking.history_notes or 'Rescheduled by Admin.' }}</pre>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Card: Attendance & Evaluation Status -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header py-3 bg-light">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-check2-circle text-primary me-2"></i>Evaluation &amp; Scoring</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="text-muted small d-block">ATTENDANCE</span>
+                            <span class="badge {% if booking.attendance == 'present' %}bg-success{% elif booking.attendance == 'absent' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                {{ booking.attendance | capitalize }}
+                            </span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-muted small d-block">SCORE RECORDED</span>
+                            <strong class="fs-5">{{ booking.score if booking.score is not none else 'Not evaluated' }}</strong>
+                            {% if booking.score is not none %}
+                                <span class="text-muted small">/ {{ booking.slot.examination.max_marks }}</span>
+                            {% endif %}
+                        </div>
+                        {% if booking.evaluation %}
+                        <div class="mb-3">
+                            <span class="text-muted small d-block">EVALUATION STATUS</span>
+                            <span class="badge {% if booking.evaluation.is_published %}bg-success{% else %}bg-info text-dark{% endif %}">
+                                {{ booking.evaluation.status | capitalize }} ({{ booking.evaluation.publication_status }})
+                            </span>
+                        </div>
+                        {% if booking.evaluation.remarks %}
+                        <div class="p-2 bg-light rounded small border">
+                            <strong>Examiner Remarks:</strong> {{ booking.evaluation.remarks }}
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
