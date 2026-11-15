@@ -21,6 +21,8 @@ An enterprise-grade, role-based academic portal engineered for the **IIT Madras 
 14. [Troubleshooting Common Issues](#14-troubleshooting-common-issues)
 15. [Academic Integrity & AI / LLM Usage Disclosure](#15-academic-integrity--ai--llm-usage-disclosure)
 16. [Known Limitations & Future Roadmap](#16-known-limitations--future-roadmap)
+17. [Known Issues and Testing Notes](#17-known-issues-and-testing-notes)
+18. [License & Academic Attribution](#18-license--academic-attribution)
 
 ---
 
@@ -596,5 +598,16 @@ In compliance with the **IIT Madras Academic Honor Code** and Modern Application
 
 ---
 
-## 17. License & Academic Attribution
+## 17. Known Issues and Testing Notes
+
+### 17.1 Known Issue: Examination Timeline Timezone
+
+- **Issue:** Examination slot creation timelines may behave unexpectedly due to a timezone mismatch between IST and UTC.
+- **Current workaround:** For manual testing, we moved the slot creation start date one day earlier (November 15 instead of November 16), which successfully enabled slot creation.
+- **For now:** We are keeping the configured timelines sufficiently early and working around the issue while testing, with UTC handling in mind.
+- **Future improvement:** Implement consistent IST-to-UTC conversion across examination scheduling, slot creation, and student booking workflows.
+
+---
+
+## 18. License & Academic Attribution
 Developed for the **IIT Madras BS Degree in Data Science and Applications** — *Modern Application Development 1 (MAD-1)*. For academic and educational use only.
