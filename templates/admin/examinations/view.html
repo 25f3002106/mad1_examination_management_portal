@@ -41,7 +41,9 @@
                     <div>
                         <div class="small text-muted fw-semibold">CURRENT WORKFLOW STATUS</div>
                         <h4 class="mb-0 fw-bold">
-                            {% if exam.status == 'Draft' %}
+                            {% if exam.results_published %}
+                                <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Results Published</span>
+                            {% elif exam.status == 'Draft' %}
                                 <span class="badge bg-secondary">Draft</span>
                             {% elif exam.status == 'Slot Creation' %}
                                 <span class="badge bg-info text-white">Slot Creation Active</span>
