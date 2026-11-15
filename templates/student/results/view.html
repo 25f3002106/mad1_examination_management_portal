@@ -84,7 +84,6 @@
                                         <th>Weightage</th>
                                         <th>Max Marks</th>
                                         <th>Marks Awarded</th>
-                                        <th>Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -98,7 +97,6 @@
                                         <td>{{ cs.rubric_criterion.weightage }}x</td>
                                         <td>{{ cs.rubric_criterion.max_marks }}</td>
                                         <td class="fw-bold text-success">{{ cs.marks_awarded }}</td>
-                                        <td class="text-muted small">{{ cs.remarks or '&mdash;' }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -107,7 +105,6 @@
                                         <td colspan="3" class="text-end">Total</td>
                                         <td>{{ exam.max_marks }}</td>
                                         <td class="text-success">{{ evaluation.total_marks }}</td>
-                                        <td></td>
                                     </tr>
                                 </tfoot>
                             </table>

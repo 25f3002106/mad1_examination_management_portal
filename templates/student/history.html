@@ -73,7 +73,7 @@
                                     {% if b.status == 'Cancelled' %}
                                         <span class="text-muted small">&mdash;</span>
                                     {% elif is_pub %}
-                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Published</span>
+                                        <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Results Published</span>
                                     {% elif has_eval %}
                                         <span class="badge bg-info text-dark">Evaluated (Pending Publication)</span>
                                     {% elif is_past or b.attendance == 'present' %}
