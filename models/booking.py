@@ -30,6 +30,19 @@ class Booking(db.Model):
     def is_active(self) -> bool:
         return self.status in ('confirmed', 'Booked')
 
+    @property
+    def can_reschedule(self) -> bool:
+        """Whether this booking can be rescheduled by an admin."""
+        if self.status not in ('confirmed', 'Booked'):
+            return False
+        if self.slot and self.slot.examination:
+            exam = self.slot.examination
+            if exam.status == 'Completed' or exam.results_published:
+                return False
+        if self.evaluation and (self.evaluation.status == 'submitted' or self.evaluation.is_published):
+            return False
+        return True
+
     # Uniqueness constraint: a student can only book a given slot once
     __table_args__ = (
         db.UniqueConstraint('student_id', 'slot_id', name='uq_student_slot_booking'),

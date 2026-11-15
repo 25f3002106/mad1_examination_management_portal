@@ -30,7 +30,7 @@
                                 <small class="text-muted">Booked on {{ booking.booking_time.strftime('%d %b %Y at %H:%M UTC') }}</small>
                             </div>
                         </div>
-                        <span class="badge {% if booking.status in ('Booked', 'confirmed') %}bg-success{% elif booking.status == 'Cancelled' %}bg-danger{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                        <span class="badge {% if booking.status == 'Completed' %}bg-secondary{% elif booking.status in ('Booked', 'confirmed') %}bg-success{% elif booking.status == 'Cancelled' %}bg-danger{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
                             {{ booking.status }}
                         </span>
                     </div>

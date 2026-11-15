@@ -30,7 +30,7 @@ def _get_active_exam_booking(student_id, exam_id):
     return Booking.query.join(Slot).filter(
         Slot.examination_id == exam_id,
         Booking.student_id == student_id,
-        Booking.status.in_(['Booked', 'confirmed'])
+        Booking.status.in_(['Booked', 'confirmed', 'Completed'])
     ).first()
 
 
@@ -263,7 +263,7 @@ def slot_book(slot_id):
         # Check active bookings directly from database
         current_active_count = Booking.query.filter(
             Booking.slot_id == slot.id,
-            Booking.status.in_(['Booked', 'confirmed'])
+            Booking.status.in_(['Booked', 'confirmed', 'Completed'])
         ).count()
 
         if current_active_count >= slot.capacity:
@@ -279,7 +279,7 @@ def slot_book(slot_id):
         ).first()
 
         if existing_booking:
-            if existing_booking.status in ('Booked', 'confirmed'):
+            if existing_booking.status in ('Booked', 'confirmed', 'Completed'):
                 flash("You have already booked this slot.", "info")
                 return redirect(url_for('student.booking_view', booking_id=existing_booking.id))
             # Reactivate cancelled booking

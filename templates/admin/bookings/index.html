@@ -120,7 +120,9 @@
                                     <small class="text-muted">{{ b.booking_time.strftime('%d %b %Y, %H:%M') }}</small>
                                 </td>
                                 <td>
-                                    {% if is_active %}
+                                    {% if b.status == 'Completed' %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% elif is_active %}
                                         <span class="badge bg-success">{{ b.status }}</span>
                                     {% elif b.status == 'Cancelled' %}
                                         <span class="badge bg-danger">Cancelled</span>
@@ -133,7 +135,7 @@
                                         <a href="{{ url_for('admin.view_booking', booking_id=b.id) }}" class="btn btn-outline-secondary btn-sm" title="View Details">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        {% if is_active %}
+                                        {% if b.can_reschedule %}
                                         <a href="{{ url_for('admin.reschedule_booking', booking_id=b.id) }}" class="btn btn-outline-primary btn-sm" title="Reschedule Slot">
                                             <i class="bi bi-arrow-repeat"></i> Reschedule
                                         </a>

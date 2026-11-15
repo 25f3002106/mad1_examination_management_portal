@@ -23,7 +23,7 @@ class Slot(db.Model):
 
     @property
     def booked_count(self) -> int:
-        return len([b for b in self.bookings if b.status in ('confirmed', 'Booked')])
+        return len([b for b in self.bookings if b.status in ('confirmed', 'Booked', 'Completed')])
 
     @property
     def available_seats(self) -> int:

@@ -63,7 +63,9 @@
                                 <td class="fw-semibold">{{ b.slot.start_time.strftime('%d %b %Y') }}</td>
                                 <td>{{ b.slot.start_time.strftime('%H:%M') }} &ndash; {{ b.slot.end_time.strftime('%H:%M UTC') }}</td>
                                 <td>
-                                    {% if b.status in ('Booked', 'confirmed') %}
+                                    {% if b.status == 'Completed' %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% elif b.status in ('Booked', 'confirmed') %}
                                         {% if is_past %}
                                             <span class="badge bg-secondary">Completed</span>
                                         {% else %}

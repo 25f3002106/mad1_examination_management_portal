@@ -106,7 +106,7 @@
                                                 <small class="text-muted">{{ booking.slot.room_or_link or 'TBA' }}</small>
                                             </td>
                                             <td>
-                                                <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'danger' }}">
+                                                <span class="badge bg-{{ 'secondary' if booking.status == 'Completed' else ('success' if booking.status == 'confirmed' else 'danger') }}">
                                                     {{ booking.status }}
                                                 </span>
                                             </td>

@@ -56,7 +56,9 @@
                                     <small class="text-muted">{{ b.slot.start_time.strftime('%H:%M') }} &ndash; {{ b.slot.end_time.strftime('%H:%M UTC') }}</small>
                                 </td>
                                 <td>
-                                    {% if b.status in ('Booked', 'confirmed') %}
+                                    {% if b.status == 'Completed' %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% elif b.status in ('Booked', 'confirmed') %}
                                         <span class="badge bg-success">{{ b.status }}</span>
                                     {% elif b.status == 'Cancelled' %}
                                         <span class="badge bg-danger">Cancelled</span>

@@ -714,6 +714,11 @@ def update_examination_status(exam_id, new_status):
         return redirect(url_for('admin.view_examination', exam_id=exam.id))
 
     exam.status = new_status
+    if new_status == 'Completed':
+        for slot in exam.slots:
+            for b in slot.bookings:
+                if b.status != 'Cancelled' and b.attendance == 'present' and b.evaluation is not None and b.evaluation.status == 'submitted':
+                    b.status = 'Completed'
     db.session.commit()
     flash(f"Examination status updated to '{new_status}'.", "success")
     return redirect(url_for('admin.view_examination', exam_id=exam.id))
@@ -733,6 +738,8 @@ def publish_results(exam_id):
         for booking in slot.bookings:
             if booking.evaluation:
                 booking.evaluation.is_published = True
+                if booking.status != 'Cancelled' and booking.attendance == 'present' and booking.evaluation.status == 'submitted':
+                    booking.status = 'Completed'
     db.session.commit()
     flash(f"Results for '{exam.name}' have been published to students.", "success")
     return redirect(url_for('admin.view_examination', exam_id=exam.id))
@@ -1097,6 +1104,23 @@ def reschedule_booking(booking_id):
     current_slot = booking.slot
     exam = current_slot.examination
     now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    # Restrictions: cannot reschedule cancelled, completed, evaluated, or published bookings
+    if booking.status == 'Cancelled':
+        flash("Cannot reschedule a cancelled booking.", "warning")
+        return redirect(url_for('admin.view_booking', booking_id=booking.id))
+
+    if booking.status == 'Completed' or exam.status == 'Completed':
+        flash("Cannot reschedule a booking for a completed examination.", "danger")
+        return redirect(url_for('admin.view_booking', booking_id=booking.id))
+
+    if exam.results_published or (booking.evaluation and booking.evaluation.is_published):
+        flash("Cannot reschedule a booking once examination results have been published.", "danger")
+        return redirect(url_for('admin.view_booking', booking_id=booking.id))
+
+    if booking.evaluation and booking.evaluation.status == 'submitted':
+        flash("Cannot reschedule a booking that has already been evaluated.", "danger")
+        return redirect(url_for('admin.view_booking', booking_id=booking.id))
 
     if request.method == 'POST':
         new_slot_id = request.form.get('new_slot_id')

@@ -51,12 +51,12 @@ def dashboard():
     if slot_ids:
         students_booked = Booking.query.filter(
             Booking.slot_id.in_(slot_ids),
-            Booking.status.in_(['confirmed', 'Booked'])
+            Booking.status.in_(['confirmed', 'Booked', 'Completed'])
         ).count()
 
     # Evaluations: pending vs completed
     booking_ids_in_my_slots = [
-        b.id for s in examiner_slots for b in s.bookings if b.status in ('confirmed', 'Booked')
+        b.id for s in examiner_slots for b in s.bookings if b.status in ('confirmed', 'Booked', 'Completed')
     ]
     pending_evaluations = 0
     completed_evaluations = 0
@@ -398,7 +398,7 @@ def students():
     if slot_ids:
         bookings = (
             Booking.query
-            .filter(Booking.slot_id.in_(slot_ids), Booking.status.in_(['confirmed', 'Booked']))
+            .filter(Booking.slot_id.in_(slot_ids), Booking.status.in_(['confirmed', 'Booked', 'Completed']))
             .order_by(Booking.booking_time.desc())
             .all()
         )
@@ -426,7 +426,7 @@ def slot_students(slot_id):
 
     bookings = Booking.query.filter(
         Booking.slot_id == slot_id,
-        Booking.status.in_(['confirmed', 'Booked'])
+        Booking.status.in_(['confirmed', 'Booked', 'Completed'])
     ).all()
 
     return render_template(
@@ -457,7 +457,7 @@ def evaluate(booking_id):
         flash('You can only evaluate students booked in your own slots.', 'danger')
         return redirect(url_for('examiner.students'))
 
-    if booking.status not in ('confirmed', 'Booked'):
+    if booking.status not in ('confirmed', 'Booked', 'Completed'):
         flash('Only confirmed bookings can be evaluated.', 'warning')
         return redirect(url_for('examiner.students'))
 
@@ -571,6 +571,7 @@ def evaluate(booking_id):
         # Update booking
         booking.attendance = 'present'
         booking.score = total
+        booking.status = 'Completed'
         db.session.commit()
 
         flash('Evaluation submitted successfully.', 'success')
@@ -610,7 +611,7 @@ def evaluations():
     if slot_ids:
         all_bookings = (
             Booking.query
-            .filter(Booking.slot_id.in_(slot_ids), Booking.status.in_(['confirmed', 'Booked']))
+            .filter(Booking.slot_id.in_(slot_ids), Booking.status.in_(['confirmed', 'Booked', 'Completed']))
             .all()
         )
 
