@@ -176,7 +176,9 @@
                                             <td><span class="badge bg-light text-dark border">{{ exam.course.code }}</span></td>
                                             <td><small>{{ exam.exam_type }}</small></td>
                                             <td>
-                                                {% if exam.status == 'Draft' %}
+                                                {% if exam.results_published %}
+                                                    <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Results Published</span>
+                                                {% elif exam.status == 'Draft' %}
                                                     <span class="badge bg-secondary">Draft</span>
                                                 {% elif exam.status == 'Slot Creation' %}
                                                     <span class="badge bg-info text-white">Slot Creation</span>
