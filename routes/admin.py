@@ -713,6 +713,15 @@ def update_examination_status(exam_id, new_status):
         flash(f"Invalid status '{new_status}'.", "danger")
         return redirect(url_for('admin.view_examination', exam_id=exam.id))
 
+    if new_status == 'Completed':
+        if exam.has_active_future_slots():
+            flash(
+                "Cannot mark examination as Completed while future examination slots are still scheduled. "
+                "All examination slots must conclude or be cancelled first.",
+                "danger"
+            )
+            return redirect(url_for('admin.view_examination', exam_id=exam.id))
+
     exam.status = new_status
     if new_status == 'Completed':
         for slot in exam.slots:

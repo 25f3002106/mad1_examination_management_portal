@@ -129,6 +129,21 @@ class Examination(db.Model):
                 return False
         return True
 
+    def has_active_future_slots(self, check_time: datetime = None) -> bool:
+        """Check if examination has any non-cancelled slots that end in the future."""
+        if check_time is None:
+            check_time = datetime.now(timezone.utc)
+        elif check_time.tzinfo is None:
+            check_time = check_time.replace(tzinfo=timezone.utc)
+
+        for slot in self.slots:
+            if slot.status == 'Cancelled':
+                continue
+            end = slot.end_time.replace(tzinfo=timezone.utc) if slot.end_time.tzinfo is None else slot.end_time
+            if end > check_time:
+                return True
+        return False
+
     def __repr__(self) -> str:
         return f"<Examination id={self.id} name='{self.name}' status='{self.status}'>"
 

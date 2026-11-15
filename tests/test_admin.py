@@ -14,6 +14,7 @@ from models.course import Course
 from models.examination import Examination, RubricCriterion
 from models.slot import Slot
 from models.booking import Booking
+from models.evaluation import Evaluation
 
 
 class AdminModuleTestCase(unittest.TestCase):
@@ -399,6 +400,153 @@ class AdminModuleTestCase(unittest.TestCase):
             # Check during booking window
             booking_check_time = datetime.now(timezone.utc) + timedelta(days=4)
             self.assertTrue(exam.can_book_slots(check_time=booking_check_time))
+
+    def test_safeguard_against_premature_examination_completion(self):
+        """Test that Admin cannot mark an exam as Completed if future active slots exist."""
+        with self.app.app_context():
+            course = Course(code='CS501', name='Distributed Systems', credits=4, status='Active')
+            db.session.add(course)
+            db.session.flush()
+            course_id = course.id
+
+            now = datetime.now(timezone.utc)
+            exam = Examination(
+                course_id=course_id,
+                name='DistSys Assessment',
+                status='Booking Open'
+            )
+            db.session.add(exam)
+            db.session.flush()
+
+            u_stu = User(name='Test Student', email='test_stu@iitm.ac.in', role='student')
+            u_stu.set_password('Pass123!')
+            db.session.add(u_stu)
+            db.session.flush()
+            student = Student(user_id=u_stu.id, roll_number='21F5001', program='BS DS')
+            db.session.add(student)
+            db.session.flush()
+
+            # Past slot with evaluated booking
+            past_slot1 = Slot(
+                examination_id=exam.id,
+                start_time=now - timedelta(days=3),
+                end_time=now - timedelta(days=3, hours=-1),
+                capacity=10,
+                status='Available'
+            )
+            db.session.add(past_slot1)
+            db.session.flush()
+
+            evaluated_booking = Booking(
+                student_id=student.id,
+                slot_id=past_slot1.id,
+                status='Booked',
+                attendance='present',
+                score=85.0
+            )
+            db.session.add(evaluated_booking)
+            db.session.flush()
+
+            eval_record = Evaluation(
+                booking_id=evaluated_booking.id,
+                total_marks=85.0,
+                status='submitted',
+                remarks='Great performance'
+            )
+            db.session.add(eval_record)
+            db.session.flush()
+
+            # Future active slot
+            future_slot = Slot(
+                examination_id=exam.id,
+                start_time=now + timedelta(days=2),
+                end_time=now + timedelta(days=2, hours=1),
+                capacity=10,
+                status='Available'
+            )
+            db.session.add(future_slot)
+            db.session.flush()
+
+            # Active booking in future slot
+            future_booking = Booking(
+                student_id=student.id,
+                slot_id=future_slot.id,
+                status='Booked',
+                attendance='pending'
+            )
+            db.session.add(future_booking)
+            db.session.commit()
+
+            exam_id = exam.id
+            future_slot_id = future_slot.id
+            future_booking_id = future_booking.id
+            eval_booking_id = evaluated_booking.id
+
+        # 1. Attempt to mark exam as Completed while active future slot exists -> REJECTED
+        resp = self.client.post(f'/admin/examinations/{exam_id}/status/Completed', follow_redirects=True)
+        self.assertIn(b'Cannot mark examination as Completed while future examination slots are still scheduled', resp.data)
+
+        # Verify state, bookings, and evaluations are unchanged
+        with self.app.app_context():
+            exam = db.session.get(Examination, exam_id)
+            self.assertEqual(exam.status, 'Booking Open')
+            fb = db.session.get(Booking, future_booking_id)
+            self.assertEqual(fb.status, 'Booked')
+            self.assertEqual(fb.attendance, 'pending')
+
+            eb = db.session.get(Booking, eval_booking_id)
+            self.assertEqual(eb.status, 'Booked')
+            self.assertEqual(eb.score, 85.0)
+            self.assertEqual(eb.attendance, 'present')
+            self.assertIsNotNone(eb.evaluation)
+            self.assertEqual(eb.evaluation.status, 'submitted')
+            self.assertEqual(eb.evaluation.remarks, 'Great performance')
+
+        # 2. Cancel the future slot -> now completion should be allowed
+        with self.app.app_context():
+            slot = db.session.get(Slot, future_slot_id)
+            slot.status = 'Cancelled'
+            db.session.commit()
+
+        resp2 = self.client.post(f'/admin/examinations/{exam_id}/status/Completed', follow_redirects=True)
+        self.assertIn(b'status updated to', resp2.data)
+
+        with self.app.app_context():
+            exam = db.session.get(Examination, exam_id)
+            self.assertEqual(exam.status, 'Completed')
+            # Cancelled slot booking was not altered
+            fb = db.session.get(Booking, future_booking_id)
+            self.assertEqual(fb.status, 'Booked')
+            # Evaluated past booking transitioned to Completed
+            eb = db.session.get(Booking, eval_booking_id)
+            self.assertEqual(eb.status, 'Completed')
+
+        # 3. Test with past slot -> completion allowed
+        with self.app.app_context():
+            exam2 = Examination(
+                course_id=course_id,
+                name='Past Slot Exam',
+                status='Closed'
+            )
+            db.session.add(exam2)
+            db.session.flush()
+
+            past_slot = Slot(
+                examination_id=exam2.id,
+                start_time=now - timedelta(days=2, hours=1),
+                end_time=now - timedelta(days=2),
+                capacity=5,
+                status='Available'
+            )
+            db.session.add(past_slot)
+            db.session.commit()
+            exam2_id = exam2.id
+
+        resp3 = self.client.post(f'/admin/examinations/{exam2_id}/status/Completed', follow_redirects=True)
+        self.assertIn(b'status updated to', resp3.data)
+        with self.app.app_context():
+            exam2 = db.session.get(Examination, exam2_id)
+            self.assertEqual(exam2.status, 'Completed')
 
 
 if __name__ == '__main__':
