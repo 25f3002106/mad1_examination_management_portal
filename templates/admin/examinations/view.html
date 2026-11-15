@@ -81,6 +81,19 @@
                             <i class="bi bi-check2-all me-1"></i> Mark Completed
                         </button>
                     </form>
+
+                    {% if exam.results_published %}
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            <i class="bi bi-patch-check-fill me-1"></i> Results Published
+                        </span>
+                    {% elif exam.has_evaluations_submitted() %}
+                        <form action="{{ url_for('admin.publish_results', exam_id=exam.id) }}" method="POST">
+                            <button type="submit" class="btn btn-sm btn-success"
+                                onclick="return confirm('Publish all results for this examination? Students will immediately be able to view their marks and feedback. This cannot be undone.')">
+                                <i class="bi bi-send-check me-1"></i> Publish Results
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
