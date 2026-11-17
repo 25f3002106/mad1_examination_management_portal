@@ -9,7 +9,7 @@
 - **Academic Degree**: IIT Madras BS in Data Science and Applications
 - **Student Full Name**: Shreya Pal
 - **Student Roll Number**: 25F3002106
-- **Student Email Address**: 25f3002106@student.onlinedegree.iitm.ac.in / jeonsamikshita@gmail.com
+- **Student Email Address**: 25f3002106@ds.study.iitm.ac.in / jeonsamikshita@gmail.com
 - **Date of Submission**: November 17, 2026
 - **Video Presentation / Demonstration Link**: [Watch the Project Demo on Google Drive](https://drive.google.com/file/d/1KCQ8O46NbcouLB5uCalOvUGKzvFOgWRU/view?usp=drive_link)
 
