@@ -2,7 +2,7 @@
 
 An enterprise-grade, role-based academic portal engineered for the **IIT Madras Modern Application Development 1 (MAD-1)** project. The Examination Management Portal (EMP) coordinates oral examinations, viva-voce assessments, practical evaluations, and project demonstrations across academic programs.
 
-> 📁 **Project Google Drive Folder**: [Google Drive Folder](https://drive.google.com/file/d/1KCQ8O46NbcouLB5uCalOvUGKzvFOgWRU/view?usp=drive_link)
+> 📁 **Demo Video Folder**: [Demo Video Folder](https://drive.google.com/file/d/1KCQ8O46NbcouLB5uCalOvUGKzvFOgWRU/view?usp=drive_link)
 
 ---
 
