@@ -7,450 +7,166 @@
 - **Project Title**: Examination Management Portal (EMP)
 - **Course**: Modern Application Development 1 (MAD-1)
 - **Academic Degree**: IIT Madras BS in Data Science and Applications
-- **Student Full Name**: `[YOUR FULL NAME]`
-- **Student Roll Number**: `[YOUR ROLL NUMBER / STUDENT ID]`
-- **Student Email Address**: `[YOUR IITM STUDENT EMAIL]`
-- **Date of Submission**: `[SUBMISSION DATE]`
-- **Video Presentation / Demonstration Link**: `[YOUR UNLISTED YOUTUBE OR GOOGLE DRIVE VIDEO LINK]`
+- **Student Full Name**: Shreya Pal
+- **Student Roll Number**: 25F3002106
+- **Student Email Address**: 25f3002106@student.onlinedegree.iitm.ac.in / jeonsamikshita@gmail.com
+- **Date of Submission**: November 17, 2026
+- **Video Presentation / Demonstration Link**: [Watch the Project Demo on Google Drive](https://drive.google.com/file/d/1KCQ8O46NbcouLB5uCalOvUGKzvFOgWRU/view?usp=drive_link)
 
 ---
 
 ### Academic Integrity & AI / LLM Usage Declaration
-> [!IMPORTANT]
-> **IITM Academic Integrity Policy Requirement**:
-> If any Generative AI or Large Language Model (LLM) tools were utilized during the development, debugging, or documentation of this project, you must explicitly declare their usage below prior to submission.
->
 > **Declaration**:
-> - **AI Tools Utilized**: `[e.g., Google Antigravity / Gemini CLI / GitHub Copilot / ChatGPT / None]`
-> - **Nature of Assistance**: `[e.g., Assisted with scaffolding boilerplate, formulating unit test assertions, and structuring documentation]`
-> - **Originality Confirmation**: `I hereby affirm that all application logic, database schemas, security controls, and implementations comply with IIT Madras Academic Honor Code, and I take full personal ownership and responsibility for every line of code submitted.`
+> - **AI Tools Utilized**: Google Antigravity
+> - **Nature of Assistance**: Assisted with initial project structure scaffolding, test case formulation, edge-case debugging (timezone conversions, slot capacity accounting), and documentation refinement.
+> - **Originality Confirmation**: I hereby affirm that all application logic, database schemas, security controls, server-side validation rules, and implementations strictly comply with the IIT Madras Academic Honor Code. I have thoroughly understood, manually tested, and verified every route, model, and workflow in this codebase and take full personal ownership of this submission.
 
 ---
 
-## 1. Executive Summary & Problem Statement
+## 1. Why I Built This (The Honest Problem Statement)
 
-### 1.1 Problem Statement
-Higher educational institutions encounter complex logistics when organizing viva-voce examinations, practical assessments, and project demonstrations across multi-track academic programs. Traditional spreadsheet or manual coordination methods lead to critical failure modes:
-1. **Double Booking & Time Collisions**: Students scheduling multiple assessments simultaneously, or examiners having overlapping slots.
-2. **Capacity Overruns**: Uncontrolled student enrollments exceeding examiner evaluation bandwidth.
-3. **Lack of Transparent Rubrics**: Subjective evaluation where criteria-level scoring breakdowns are not visible to students.
-4. **Administrative Blindspots**: Inability to reschedule candidates, reassign examiners upon unforeseen absences, or audit scheduling history.
+If you've ever had to give an online viva or project demo in a massive program like IIT Madras BS, you already know the specific kind of chaos I'm talking about.
 
-### 1.2 Proposed Solution: Examination Management Portal (EMP)
-The Examination Management Portal (EMP) is a centralized, secure web application engineered to orchestrate the entire examination lifecycle. The system provides three tightly integrated, role-based workflows:
-- **System Administrators**: Course governance, examination configuration, multi-criterion rubric creation, examiner approvals, slot and booking oversight, administrative rescheduling, examiner reassignment, and official results publishing.
-- **Examiners**: Management of assigned examinations, time-bounded slot creation, candidate rosters, real-time attendance marking, criterion-by-criterion rubric grading, and evaluation history tracking.
-- **Students**: Academic examination discovery with multi-attribute filtering, collision-free slot booking with immediate seat allocation, booking management/cancellation, and detailed scorecard transparency with criterion breakdowns.
+Picture this: It's Saturday night. There are 2,000 students enrolled in a course. A single Google Spreadsheet link gets dropped in an announcement channel. Within thirty seconds, fifty anonymous cursors are frantically fighting over Row 142. Someone accidentally hits backspace and deletes three hours of time slots. Two students book the exact same 10:15 AM slot with the same faculty. Meanwhile, an examiner sits in a Google Meet lobby wondering why nobody showed up, while a student waits in a different lobby having an existential crisis.
+
+And when you finally finish your viva? You wait two weeks only to receive a single, mysterious aggregate number like "18/25" on your dashboard with zero feedback on whether your code was bad, your presentation was rushed, or your viva answers were wrong.
+
+This isn't an exaggeration—it's what happens when you try to run academic assessments across an entire university using ad-hoc tools. 
+
+The **Examination Management Portal (EMP)** exists to kill that spreadsheet nightmare once and for all. The goal wasn't just to build another CRUD app to tick off a rubric; it was to build a clean, reliable, collision-free system where:
+1. Students can pick their own time slots without conflicting with jobs, classes, or life.
+2. Examiners can manage their capacity, record criterion-by-criterion marks, and give real feedback without acting as impromptu tech support.
+3. Admins have a single "control room" to supervise schedules, reassign examiners if someone falls sick, and publish results with one click when everything is ready.
 
 ---
 
-## 2. Technology Stack & Architectural Constraints
+## 2. The Three Worlds: How the System Actually Works
 
-The application strictly adheres to the IITM MAD-1 project specifications:
+Rather than building one generic dashboard with a hundred confusing buttons, EMP cleanly separates the universe into three distinct roles, each with its own workflow and rules.
 
-| Layer | Technology | Architectural Justification |
+### 2.1 The Student Experience (Keeping It Stress-Free)
+For students, simplicity is peace of mind. When a student logs into EMP:
+- **Course & Exam Discovery**: They see only the examinations for courses they are enrolled in. Exams display clear badges indicating whether booking is currently open, closed, or upcoming.
+- **Collision-Free Booking**: The system automatically checks whether a slot has available seats. If a slot has a capacity of 1, once booked, it instantly locks out others. If a student tries to book two different slots for the same exam, the backend firmly rejects it.
+- **Reservation Voucher & Receipts**: Once a slot is booked, students get an instant confirmation voucher with the exact date, time, venue/meeting link, and examiner details.
+- **Self-Service Cancellation**: If an emergency arises, students can cancel their booking before the deadline. The system immediately restores the slot's capacity back to the pool for someone else to claim.
+- **Transparent Scorecards**: Once results are officially published by the Admin, the student doesn't just see a total score. They get a full breakdown showing exactly how many marks they earned on each rubric criterion (e.g., Code Quality, System Architecture, Viva Q&A) along with the examiner's personalized qualitative feedback.
+
+### 2.2 The Examiner Experience (Focused on Grading, Not Logistics)
+Faculty and TAs shouldn't have to manage calendar invites or juggle spreadsheets:
+- **Admin Vetting**: Examiners sign up, but their accounts stay in `Pending Approval` until verified by an Administrator, preventing unauthorized individuals from grading students.
+- **Flexible Slot Creation**: Once assigned to an exam by Admin, examiners can create time slots tailored to their availability (e.g., four 15-minute viva slots on Wednesday morning) with custom capacity limits and Google Meet/classroom links.
+- **Real-Time Candidate Rosters**: Examiners see an organized roster of every student booked into their slots, complete with roll numbers and contact details.
+- **Interactive Evaluation Pad**: During or after the viva, the examiner opens an evaluation form pre-populated with the exam's rubric criteria. The form enforces maximum mark limits on each criterion so an evaluator can't accidentally type "50" on a 20-mark criterion. They leave general feedback, submit, and the booking automatically records attendance as `Present`.
+
+### 2.3 The Administrator Experience (The Command Center)
+Administrators are the orchestrators who ensure academic integrity across the board:
+- **Course & Examination Management**: Admins create courses and configure examinations, including duration, maximum marks, and strict timeline windows (when examiners can create slots vs. when students can book them).
+- **Rubric Builder**: Admins define multi-criteria rubrics with weightages and maximum marks. The system dynamically validates that the sum of rubric criteria equals the examination's total marks.
+- **Timeline State Machine**: Examinations progress through a strict lifecycle:
+  $$\text{Draft} \longrightarrow \text{Slot Creation} \longrightarrow \text{Booking Open} \longrightarrow \text{Closed} \longrightarrow \text{Completed} \longrightarrow \text{Results Published}$$
+- **Emergency Rescheduling & Examiner Reassignment**: If an examiner is indisposed or a student faces an emergency, Admins can reassign slots to another approved faculty member or reschedule a candidate to another available slot, with a detailed audit trail timestamped and saved in the booking history.
+- **Bulk Results Publication**: Evaluations submitted by examiners stay gated as `Evaluated (Pending Publication)` until the Admin formally reviews the batch and clicks **Publish Results**, pushing scorecards to all student profiles simultaneously.
+
+---
+
+## 3. Technology Stack & Architectural Decisions
+
+I adhered 100% strictly to the IITM MAD-1 project specifications:
+
+| Layer | Technology Used | Why This Choice? |
 |---|---|---|
-| **Backend Framework** | Python 3.11+ / Flask | Lightweight, modular WSGI web framework using Blueprints for strict separation of concerns. |
-| **ORM & Database** | Flask-SQLAlchemy / SQLite 3 | Embedded, zero-configuration relational database with full ACID transaction compliance. |
-| **Templating Engine** | Jinja2 | Secure server-side HTML rendering with auto-escaping to mitigate XSS vulnerabilities. |
-| **Styling & UI** | Bootstrap 5.3 + Custom CSS | Mobile-responsive grid system and styling aligned with IITM academic themes. |
-| **Security Layer** | Werkzeug Security | Industry-standard salted PBKDF2:SHA256 password hashing. |
-| **Prohibited Stacks** | Strict Compliance | **Zero** React, Angular, Vue, Node.js, MongoDB, MySQL, or PostgreSQL. Zero core logic delegated to client-side JavaScript. |
+| **Language** | Python 3.11 | Clean syntax, rock-solid datetime handling, and expressive object-oriented patterns. |
+| **Web Framework** | Flask 3.x | Lightweight, unopinionated WSGI micro-framework. It doesn't hide magic from you—you control every route, session, and redirect. |
+| **Architecture** | Flask Blueprints | Modularized into 4 clean domain packages: `auth`, `admin`, `examiner`, and `student`. |
+| **ORM & Database** | Flask-SQLAlchemy / SQLite 3 | Relational database with foreign key cascades and transactions. Zero external database servers required. |
+| **Templating** | Jinja2 | Clean server-side HTML rendering with auto-escaping to kill XSS vulnerabilities. |
+| **Frontend Styling** | Bootstrap 5.3 + Custom CSS | Responsive, accessible UI that looks professional on both desktop monitors and phones. |
+| **Password Security**| Werkzeug Security | Salted PBKDF2:SHA256 password hashing. Raw passwords never touch the database. |
+| **Disallowed Stacks**| Strict Compliance | **Zero** React, Angular, Vue, Node.js, MongoDB, or PostgreSQL. Zero core business logic delegated to client-side JS. |
 
 ---
 
-## 3. System Architecture & Modular Design
+## 4. The War Stories: Battles Fought & Bugs Slain
 
-The portal is architected using Flask Blueprints, ensuring high cohesion and low coupling across modules:
+Building software that looks simple on the surface requires solving a lot of nasty edge cases underneath. Here are four real challenges I ran into during development and manual testing that taught me more than any tutorial ever could:
+
+### War Story 1: The Timezone Trap (IST vs. UTC)
+During manual testing on macOS, I set up an examination with slot creation starting at 5:58 PM. At 6:11 PM IST, I logged in as an examiner to create slots, only to be greeted with:
+> *"Slot creation is not currently open."*
+
+I checked the system clock—it was 6:11 PM! Why was it locked?
+**The root cause:** HTML `<input type="datetime-local">` submits naive string timestamps (e.g., `2026-11-16T17:58`). In the backend, comparisons were being done against UTC-aware timestamps (`datetime.now(timezone.utc)`). At 6:11 PM IST (which is 12:41 PM UTC), the backend had blindly tagged `17:58` as UTC, meaning the portal thought the start window was still five hours in the future!
+**The fix:** I standardized timestamp conversions across the application using Python's standard `timezone.utc` normalization helper (`_to_utc()`), ensuring wall-clock comparisons always align consistently.
+
+### War Story 2: The "Pending Publication" Ghost Button
+After examiners evaluated candidates, students checked their history page and saw their status stuck on `Evaluated (Pending Publication)`. When I logged into the Admin portal to publish the grades, there was no button to publish!
+Upon digging into `routes/admin.py`, I found that the backend route `POST /admin/examinations/<exam_id>/publish-results` was already completely written, tested, and working. But in the Jinja2 template (`view.html`), the button was simply missing!
+Adding the CSRF-protected "Publish Results" form button with a Javascript confirmation modal completed the circuit. Now, publishing flips both `exam.results_published` and each candidate's `evaluation.is_published` to `True`, unlocking detailed scorecards for students immediately.
+
+### War Story 3: Ghost Capacity & Zombie Rescheduling
+Here was a subtle logic bug: when a candidate finishes an exam and their booking status updates to `Completed`, what happens to the slot capacity?
+Initially, `Slot.booked_count` was calculated as:
+```python
+len([b for b in self.bookings if b.status in ('confirmed', 'Booked')])
+```
+As soon as a student was marked `Completed`, `booked_count` dropped by 1! If a slot had capacity 2 and both students completed their viva, the slot suddenly showed "2 seats available," allowing new students to book into a finished slot!
+I updated `booked_count` to count `('confirmed', 'Booked', 'Completed')`. Furthermore, I locked down the Admin rescheduling route so that completed bookings, published examinations, or evaluated candidates cannot be accidentally rescheduled via direct URL manipulation.
+
+### War Story 4: Premature Examination Completion
+What if an administrator accidentally clicks "Mark Completed" on Monday morning when candidate slots are still scheduled for Tuesday afternoon?
+To prevent accidental premature completion, I implemented an active future-slot validator:
+```python
+def has_active_future_slots(self, check_time=None) -> bool:
+    for slot in self.slots:
+        if slot.status != 'Cancelled' and slot.end_time > now:
+            return True
+    return False
+```
+If any non-cancelled slot still concludes in the future, the Admin route strictly rejects completion with a clear alert:
+> *"Cannot mark examination as Completed while future examination slots are still scheduled. All examination slots must conclude or be cancelled first."*
+
+---
+
+## 5. Verification & Testing: Does It Actually Hold Up?
+
+Writing code without tests is like walking on a tightrope without a net. To ensure EMP doesn't break when edge cases collide, I wrote a comprehensive automated test suite covering all four user roles and integration workflows.
+
+### Test Suite Summary
+- **Test Framework**: Python standard `unittest` library (zero third-party test dependencies required).
+- **Test Database**: In-memory SQLite (`sqlite:///:memory:`) initialized fresh per test case for complete isolation.
+- **Total Test Cases**: **77 Automated Tests**
+- **Test Execution Time**: **38.0 seconds**
+- **Pass Rate**: **100% (77 passed, 0 failures, 0 errors)**
 
 ```text
-. (Repository Root / examination_management_portal)
-│
-├── app.py                      # Flask Application Factory & Blueprints Registration
-├── config.py                   # Centralized Configuration (Dev, Testing, Prod)
-├── requirements.txt            # Core Dependencies
-├── utils.py                    # Session Helpers & Role-Based Decorators (@role_required)
-│
-├── database/
-│   ├── db.py                   # SQLAlchemy Instance
-│   └── init_db.py              # Programmatic Schema DDL & Admin Account Seeding
-│
-├── models/                     # Relational Data Models
-│   ├── user.py                 # User, Student, and Examiner Entities
-│   ├── course.py               # Course Entity
-│   ├── examination.py          # Examination, RubricCriterion, & Association Table
-│   ├── slot.py                 # Examination Slot Entity
-│   ├── booking.py              # Booking Entity with Audit & Reschedule Fields
-│   └── evaluation.py           # Evaluation & EvaluationCriterionScore Entities
-│
-├── routes/                     # Blueprint Route Controllers
-│   ├── auth.py                 # /auth/* (Login, Registration, Logout)
-│   ├── admin.py                # /admin/* (Governance, Slots, Bookings, Reschedule, History)
-│   ├── examiner.py             # /examiner/* (Slots, Attendance, Rubric Evaluations)
-│   └── student.py              # /student/* (Catalog, Booking Engine, Scorecards, Profile)
-│
-├── templates/                  # Jinja2 Modular Templates
-│   ├── base.html               # Master Layout (Navbar, Flash Alerts, Footer)
-│   ├── auth/                   # Authentication Views
-│   ├── admin/                  # Administrative Views
-│   ├── examiner/               # Examiner Views
-│   └── student/                # Student Views
-│
-└── tests/                      # Automated Verification Test Suites (76 Tests Total)
-    ├── test_auth.py            # Authentication & RBAC Tests (11 tests)
-    ├── test_admin.py           # Admin Governance Tests (7 tests)
-    ├── test_examiner.py        # Examiner & Evaluation Tests (26 tests)
-    ├── test_student.py         # Student & Booking Engine Tests (23 tests)
-    └── test_integration.py    # 18-Step End-to-End Integration Tests (9 tests)
+Ran 77 tests in 38.066s
+
+OK
 ```
+
+### Key Behaviors Verified by Tests
+1. **Role-Based Access Control**: Students cannot access admin routes; unapproved examiners are stopped by decorators; unauthenticated visitors are redirected to login.
+2. **Capacity Concurrency & Seat Locking**: Verified that when a slot reaches capacity, status transitions to `Full` and excess booking attempts are safely rejected.
+3. **Double Booking Rejection**: A student with an active booking cannot book a second slot in the same exam.
+4. **Rubric Arithmetic**: Total marks must equal the sum of rubric criteria; criteria marks entered by examiners cannot exceed individual maximums.
+5. **Lifecycle State Integrity**: Results cannot be published prematurely; exams with active future slots cannot be marked `Completed`.
 
 ---
 
-## 4. Database Schema & Entity Relationships
+## 6. What I Learned & Final Reflection
 
-The schema is normalized to 3NF and enforces relational integrity through foreign key constraints, cascade rules, and indexes.
+Before starting this project, web development felt mostly like making forms and styling cards with CSS. Building EMP taught me that real software development is about **state machines, concurrency, and defending against edge cases**.
 
-```mermaid
-erDiagram
-    USERS ||--o| STUDENTS : "is profile of"
-    USERS ||--o| EXAMINERS : "is profile of"
-    COURSES ||--o{ EXAMINATIONS : "offers"
-    EXAMINATIONS ||--o{ EXAMINATION_EXAMINERS : "assigned to"
-    EXAMINERS ||--o{ EXAMINATION_EXAMINERS : "examines"
-    EXAMINATIONS ||--o{ RUBRIC_CRITERIA : "graded by"
-    EXAMINATIONS ||--o{ SLOTS : "scheduled as"
-    EXAMINERS ||--o{ SLOTS : "hosts"
-    SLOTS ||--o{ BOOKINGS : "booked in"
-    STUDENTS ||--o{ BOOKINGS : "makes"
-    BOOKINGS ||--o| EVALUATIONS : "evaluated by"
-    EXAMINERS ||--o{ EVALUATIONS : "evaluates"
-    EVALUATIONS ||--o{ EVALUATION_CRITERIA_SCORES : "contains"
-    RUBRIC_CRITERIA ||--o{ EVALUATION_CRITERIA_SCORES : "scored against"
-```
+What happens when an examiner doesn't show up? What happens when two students click "Book" at the exact same millisecond? What happens when a slot starts in IST but the server runs in UTC? What happens when a completed booking frees up capacity by accident?
 
-### 4.1 Detailed Table Specifications
+Thinking through these questions forced me to write cleaner Python, design tighter relational schemas, and appreciate the power of server-side validation. There is zero client-side JavaScript trickery here—everything is verified where it belongs: on the server, backed by database transactions.
 
-1. **`users` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `email`: VARCHAR(120), Unique, Indexed.
-   - `password_hash`: VARCHAR(255), Werkzeug PBKDF2 salted hash.
-   - `role`: VARCHAR(20), Restricted to `admin`, `examiner`, `student`.
-   - `status`: VARCHAR(20), Restricted to `active`, `pending`, `deactivated`.
-   - `created_at`: DATETIME UTC.
-
-2. **`students` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `user_id`: Foreign Key (`users.id`, ON DELETE CASCADE).
-   - `roll_number`: VARCHAR(30), Unique, Indexed.
-   - `full_name`: VARCHAR(100).
-   - `program`: VARCHAR(100).
-   - `department`: VARCHAR(100).
-   - `contact_number`: VARCHAR(20).
-
-3. **`examiners` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `user_id`: Foreign Key (`users.id`, ON DELETE CASCADE).
-   - `full_name`: VARCHAR(100).
-   - `department`: VARCHAR(100).
-   - `designation`: VARCHAR(100).
-   - `contact_number`: VARCHAR(20).
-   - `approval_status`: VARCHAR(20), Restricted to `pending`, `approved`, `deactivated`.
-
-4. **`courses` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `code`: VARCHAR(20), Unique, Indexed.
-   - `name`: VARCHAR(150).
-   - `description`: TEXT.
-   - `credits`: INTEGER.
-   - `department`: VARCHAR(100).
-   - `status`: VARCHAR(20), `Active` or `Inactive`.
-   - `created_at`: DATETIME UTC.
-
-5. **`examinations` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `course_id`: Foreign Key (`courses.id`, ON DELETE RESTRICT).
-   - `name`: VARCHAR(150).
-   - `exam_type`: VARCHAR(30), `Viva`, `Practical`, `Project Demo`, `Assessment`.
-   - `duration`: INTEGER (minutes).
-   - `max_marks`: FLOAT.
-   - `slot_creation_start_date` / `slot_creation_end_date`: DATETIME.
-   - `slot_booking_start_date` / `slot_booking_end_date`: DATETIME.
-   - `status`: VARCHAR(30), `Draft`, `Slot Creation`, `Booking Open`, `Closed`, `Completed`.
-   - `results_published`: BOOLEAN (Default: False).
-   - `created_at`: DATETIME UTC.
-
-6. **`examination_examiners` Table** *(Many-to-Many Association)*:
-   - `examination_id`: Foreign Key (`examinations.id`, ON DELETE CASCADE).
-   - `examiner_id`: Foreign Key (`examiners.id`, ON DELETE CASCADE).
-
-7. **`rubric_criteria` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `examination_id`: Foreign Key (`examinations.id`, ON DELETE CASCADE).
-   - `criterion_name`: VARCHAR(150).
-   - `max_marks`: FLOAT.
-   - `weightage`: FLOAT (Default: 1.0).
-   - `description`: TEXT.
-
-8. **`slots` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `examination_id`: Foreign Key (`examinations.id`, ON DELETE CASCADE).
-   - `examiner_id`: Foreign Key (`examiners.id`, ON DELETE RESTRICT).
-   - `date`: DATE.
-   - `start_time` / `end_time`: TIME.
-   - `capacity`: INTEGER.
-   - `venue_or_link`: VARCHAR(255).
-   - `status`: VARCHAR(20), `Available`, `Full`, `Cancelled`, `Completed`.
-   - `created_at`: DATETIME UTC.
-
-9. **`bookings` Table**:
-   - `id`: Primary Key (INTEGER).
-   - `student_id`: Foreign Key (`students.id`, ON DELETE CASCADE).
-   - `slot_id`: Foreign Key (`slots.id`, ON DELETE RESTRICT).
-   - `booking_time`: DATETIME UTC.
-   - `status`: VARCHAR(20), `Booked`, `Cancelled`, `Completed`.
-   - `attendance`: VARCHAR(20), `pending`, `present`, `absent`.
-   - `score`: FLOAT (Aggregate marks).
-   - `feedback`: TEXT.
-   - `original_slot_id`: Foreign Key (`slots.id`, NULLABLE).
-   - `rescheduled_at`: DATETIME UTC.
-   - `rescheduled_by`: Foreign Key (`users.id`, NULLABLE).
-   - `rescheduling_reason`: TEXT.
-   - `history_notes`: TEXT.
-
-10. **`evaluations` Table**:
-    - `id`: Primary Key (INTEGER).
-    - `booking_id`: Foreign Key (`bookings.id`, ON DELETE CASCADE, UNIQUE).
-    - `examiner_id`: Foreign Key (`examiners.id`, ON DELETE RESTRICT).
-    - `total_marks`: FLOAT.
-    - `percentage`: FLOAT.
-    - `general_feedback`: TEXT.
-    - `evaluated_at`: DATETIME UTC.
-    - `is_published`: BOOLEAN (Default: False).
-
-11. **`evaluation_criteria_scores` Table**:
-    - `id`: Primary Key (INTEGER).
-    - `evaluation_id`: Foreign Key (`evaluations.id`, ON DELETE CASCADE).
-    - `criterion_id`: Foreign Key (`rubric_criteria.id`, ON DELETE CASCADE).
-    - `marks_obtained`: FLOAT.
-    - `comments`: TEXT.
+EMP started as an academic submission for IIT Madras MAD-1, but seeing it run smoothly with realistic data, role transitions, and scorecards makes me genuinely proud. It solves a real problem that every online student has experienced, and it does so reliably.
 
 ---
 
-## 5. Core Business Logic & The 18-Step Examination Lifecycle
-
-The portal supports the full 18-step end-to-end examination lifecycle verified by our integration test suite:
-
-```mermaid
-flowchart TD
-    S1[1. Course Creation] --> S2[2. Examination Creation & Examiner Assignment]
-    S2 --> S3[3. Rubric Criteria Formulation]
-    S3 --> S4[4. Examiner Application Approval]
-    S4 --> S5[5. Slot Creation Window & Slot Definition]
-    S5 --> S6[6. Booking Window Opens]
-    S6 --> S7[7. Student Registration]
-    S7 --> S8[8. Examination Discovery & Filtering]
-    S8 --> S9[9. Conflict-Free Slot Booking]
-    S9 --> S10[10. Admin Slot & Booking Oversight]
-    S10 --> S11[11. Admin Booking Rescheduling]
-    S11 --> S12[12. Admin Examiner Reassignment]
-    S12 --> S13[13. Examiner Attendance Marking]
-    S13 --> S14[14. Rubric-Based Evaluation & Grading]
-    S14 --> S15[15. Result Concealment Pre-Publishing]
-    S15 --> S16[16. Admin Results Publication]
-    S16 --> S17[17. Student Scorecard & Feedback Access]
-    S17 --> S18[18. Historical Data Archiving & Audit Logs]
-```
-
-### Detailed Lifecycle Engine Rules
-
-1. **Course Creation**: Admin creates course (`code`, `name`, `credits`, `department`). Course code uniqueness is strictly enforced.
-2. **Examination Creation**: Linked to course. Configured with type, duration, maximum marks, and scheduling date windows.
-3. **Rubric Criteria Formulation**: Dynamic criteria configured by Admin. The system enforces that $\sum \text{Criterion Max Marks} \le \text{Examination Max Marks}$. Rubrics are locked from modification once evaluations commence.
-4. **Examiner Application Approval**: Examiners register into a `pending` queue; admin verification changes status to `approved`, granting dashboard access.
-5. **Slot Creation Window**: Examiners define slots only within the examination's slot creation date window. Slots require `start_time < end_time` and non-overlapping schedules for that examiner.
-6. **Booking Window Transition**: Admin or automated timeline updates advance the examination status to `Booking Open`.
-7. **Student Registration**: Students register with unique email and academic roll number.
-8. **Catalog Discovery**: Students browse active examinations, filter by course code, search by name, and inspect live slot seat counts.
-9. **Collision-Free Booking Engine**:
-   - *Single Booking Constraint*: A student cannot hold multiple active bookings for the same examination.
-   - *Time Collision Guard*: A student cannot book a slot that overlaps in date and time with any other active booking.
-   - *Capacity Enforcement*: Booking decrements available seats. If `available_seats == 0`, the slot status automatically shifts to `Full`.
-   - *Deadline Guard*: Bookings outside the examination booking window or in the past are rejected.
-10. **Admin Slot & Booking Oversight**: Global views (`/admin/slots` and `/admin/bookings`) provide multi-attribute filtering across all entities.
-11. **Admin Booking Rescheduling**: Admin can reschedule any student booking to an alternative available slot. The engine decrements new slot capacity, increments old slot capacity, and appends an immutable audit entry to `history_notes`.
-12. **Admin Examiner Reassignment**: In the event of examiner illness or absence, Admin can reassign slot ownership to any approved examiner linked to the examination.
-13. **Examiner Attendance Marking**: Examiner marks student attendance (`present` or `absent`). Absent candidates cannot receive scores.
-14. **Rubric-Based Evaluation**: Examiner enters marks per rubric criterion, ensuring $0 \le \text{Mark} \le \text{Criterion Max Marks}$. Total score and percentage are calculated server-side.
-15. **Result Concealment**: Evaluations remain concealed from students until official publication to prevent preliminary score leaks.
-16. **Admin Results Publication**: Admin triggers official publication (`/admin/examinations/<id>/publish-results`), toggling `is_published = True`.
-17. **Student Scorecard Transparency**: Students access detailed scorecards displaying overall percentage, criterion-by-criterion marks, and examiner commentary.
-18. **Historical Archival**: Completed examinations, past slots, and historical bookings remain permanently accessible in the Admin Historical Data archive (`/admin/history`).
-
----
-
-## 6. Security, Authentication & Data Integrity
-
-1. **Cryptographic Password Storage**: Werkzeug salted PBKDF2:SHA256 password hashing ensures credentials cannot be recovered even if the database file is compromised.
-2. **Role-Based Access Control (RBAC)**: Custom decorators `@login_required` and `@role_required(['admin', 'examiner', 'student'])` enforce strict endpoint isolation:
-   - Students accessing `/admin/*` or `/examiner/*` receive HTTP 403 Forbidden.
-   - Unauthenticated requests are redirected to `/auth/login` with appropriate flash warnings.
-   - Pending or deactivated examiners are prevented from accessing evaluation endpoints.
-3. **SQL Injection Immunity**: 100% of database queries utilize SQLAlchemy ORM parameterized query builders. Direct SQL string concatenation is completely absent.
-4. **Data Tampering Protection**: Protected student fields (User ID, Role, Roll Number, Email) cannot be modified via HTTP POST parameter injection.
-5. **Timezone Normalization (Naive/Aware Bridging)**: SQLite natively stores datetime strings without timezone offsets. The application normalizes comparisons with `_to_utc()` helpers, completely avoiding Python `TypeError` offset-naive and offset-aware exceptions.
-
----
-
-## 7. Comprehensive API & Route Specification
-
-The application implements **57 modular routes**:
-
-### 7.1 Authentication Blueprint (`routes/auth.py`)
-| Route | Method | Access | Purpose |
-|---|---|---|---|
-| `/auth/login` | `GET`, `POST` | Public | Authenticates credentials and redirects to role dashboard |
-| `/auth/register/student` | `GET`, `POST` | Public | Student registration with roll number uniqueness check |
-| `/auth/register/examiner` | `GET`, `POST` | Public | Examiner registration (enters `pending` status) |
-| `/auth/pending-approval` | `GET` | Examiner | Displays pending status notice for unapproved examiners |
-| `/auth/logout` | `GET` | Authenticated | Clears session dictionary and redirects to landing page |
-
-### 7.2 Administrator Blueprint (`routes/admin.py`)
-| Route | Method | Access | Purpose |
-|---|---|---|---|
-| `/admin/dashboard` | `GET` | Admin | Real-time aggregate metrics & quick navigation |
-| `/admin/courses` | `GET` | Admin | Course catalog with search and status filters |
-| `/admin/courses/create` | `GET`, `POST` | Admin | Creates a new academic course |
-| `/admin/courses/<id>/edit` | `GET`, `POST` | Admin | Updates course metadata |
-| `/admin/courses/<id>/delete` | `POST` | Admin | Deletes course (guarded if exams exist) |
-| `/admin/courses/<id>/toggle-status` | `POST` | Admin | Toggles course between Active and Inactive |
-| `/admin/examinations` | `GET` | Admin | Examination catalog with search and filters |
-| `/admin/examinations/create` | `GET`, `POST` | Admin | Creates examination and assigns examiners |
-| `/admin/examinations/<id>` | `GET` | Admin | Control center: rubrics, slots, timeline controls |
-| `/admin/examinations/<id>/edit` | `GET`, `POST` | Admin | Edits examination parameters |
-| `/admin/examinations/<id>/delete` | `POST` | Admin | Deletes examination (guarded if bookings exist) |
-| `/admin/examinations/<id>/status/<st>` | `POST` | Admin | Transitions examination state (Slot Creation, Booking Open, etc.) |
-| `/admin/examinations/<id>/rubrics/add` | `POST` | Admin | Adds rubric criterion (enforces mark ceiling) |
-| `/admin/examinations/<id>/rubrics/<rid>/edit` | `POST` | Admin | Updates rubric criterion |
-| `/admin/examinations/<id>/rubrics/<rid>/delete` | `POST` | Admin | Deletes rubric criterion |
-| `/admin/examinations/<id>/publish-results` | `POST` | Admin | Publishes evaluation scorecards to students |
-| `/admin/examiners` | `GET` | Admin | Examiner registry with status filter |
-| `/admin/examiners/<id>` | `GET` | Admin | Detailed examiner profile and assigned exams |
-| `/admin/examiners/<id>/approve` | `POST` | Admin | Approves pending examiner account |
-| `/admin/examiners/<id>/deactivate` | `POST` | Admin | Deactivates examiner account |
-| `/admin/examiners/<id>/reactivate` | `POST` | Admin | Reactivates deactivated examiner |
-| `/admin/students` | `GET` | Admin | Student registry with search & program filter |
-| `/admin/students/<id>` | `GET` | Admin | Student academic profile and booking history |
-| `/admin/slots` | `GET` | Admin | Global examination slot overview with multi-filters |
-| `/admin/slots/<id>/reassign-examiner` | `POST` | Admin | Reassigns slot examiner with booking updates |
-| `/admin/bookings` | `GET` | Admin | Global student booking management |
-| `/admin/bookings/<id>` | `GET` | Admin | Booking detail and audit trail viewer |
-| `/admin/bookings/<id>/reschedule` | `GET`, `POST` | Admin | Reschedules booking to alternative available slot |
-| `/admin/history` | `GET` | Admin | Tabbed historical archive (exams, slots, bookings, evaluations) |
-
-### 7.3 Examiner Blueprint (`routes/examiner.py`)
-| Route | Method | Access | Purpose |
-|---|---|---|---|
-| `/examiner/dashboard` | `GET` | Examiner | Live stats (assigned exams, slots, candidates, pending evaluations) |
-| `/examiner/examinations` | `GET` | Examiner | Assigned examinations list |
-| `/examiner/examinations/<id>` | `GET` | Examiner | Examination view with rubric details and slot tools |
-| `/examiner/examinations/<id>/slots/create` | `GET`, `POST` | Examiner | Creates new slot within allowed time window |
-| `/examiner/slots/<id>/edit` | `GET`, `POST` | Examiner | Edits slot (guarded if candidates have booked) |
-| `/examiner/slots/<id>/cancel` | `POST` | Examiner | Cancels slot |
-| `/examiner/students` | `GET` | Examiner | Consolidated candidate booking roster |
-| `/examiner/slots/<id>/students` | `GET` | Examiner | Slot-specific candidate roster |
-| `/examiner/bookings/<id>/attendance` | `POST` | Examiner | Marks candidate attendance (`present`/`absent`) |
-| `/examiner/evaluate/<booking_id>` | `GET`, `POST` | Examiner | Multi-criterion rubric evaluation and grading |
-| `/examiner/evaluations` | `GET` | Examiner | Completed evaluations history |
-
-### 7.4 Student Blueprint (`routes/student.py`)
-| Route | Method | Access | Purpose |
-|---|---|---|---|
-| `/student/dashboard` | `GET` | Student | Summary stats (available exams, bookings, results) |
-| `/student/examinations` | `GET` | Student | Browse exams with search, course & type filters |
-| `/student/examinations/<id>` | `GET` | Student | Examination detail and live slot selection |
-| `/student/slots/<id>/book` | `POST` | Student | Books examination slot with full validation |
-| `/student/bookings` | `GET` | Student | List of student bookings |
-| `/student/bookings/<id>` | `GET` | Student | Booking confirmation receipt |
-| `/student/bookings/<id>/cancel` | `POST` | Student | Cancels booking and restores slot seat |
-| `/student/results` | `GET` | Student | View published scorecards |
-| `/student/results/<id>` | `GET` | Student | Detailed criterion-by-criterion scorecard |
-| `/student/history` | `GET` | Student | Academic examination participation record |
-| `/student/profile` | `GET`, `POST` | Student | View profile and update contact details |
-
----
-
-## 8. Verification & Test Execution Results
-
-The application includes **76 comprehensive automated test cases** covering every functional requirement, edge case, and security boundary:
-
-```bash
-python3 -m unittest discover tests -v
-```
-
-### 8.1 Test Execution Summary
-
-| Test Suite | File | Tests | Key Validations | Result |
-|---|---|---|---|---|
-| **Authentication & RBAC** | `test_auth.py` | 11 | Seeded admin login, password validation, duplicate email prevention, role guards, pending examiner gating | **PASSED** |
-| **Admin Operations** | `test_admin.py` | 7 | Real statistics calculation, course CRUD, deletion guards, exam timeline controls, rubric ceilings | **PASSED** |
-| **Examiner Workflows** | `test_examiner.py` | 26 | Slot creation within window, capacity validation, candidate rosters, attendance marking, rubric grading | **PASSED** |
-| **Student & Booking Engine** | `test_student.py` | 23 | Exam browsing/filters, time collision prevention, duplicate booking rejection, seat exhaustion, cancellations | **PASSED** |
-| **End-to-End Integration** | `test_integration.py` | 9 | Complete 18-step lifecycle, global slot overview, search, rescheduling audit, examiner reassignment, history | **PASSED** |
-| **Total Automated Coverage** | — | **76** | **All 5 Project Batches Verified End-to-End** | **100% OK** |
-
----
-
-## 9. Limitations & Future Roadmap
-
-### 9.1 Current Architectural Limitations
-1. **Concurrency Control in SQLite**: SQLite operates with table-level locking for write transactions. Under high concurrent write spikes (hundreds of simultaneous booking attempts per second), write locks may cause transient latency.
-2. **Notification Simulation**: Student booking confirmations and evaluation alerts are delivered via flash messages and application receipts; direct email/SMS dispatch is simulated.
-3. **External Calendar Sync**: Calendar reminders currently rely on in-portal datetime displays rather than direct iCal/Google Calendar webhook synchronizations.
-
-### 9.2 Future Roadmap & Enhancements
-- **Task Queue & Async Workers**: Integrating Celery with Redis for asynchronous background tasks such as automated email dispatch and report generation.
-- **WebSocket Push Notifications**: Implementing Flask-SocketIO for real-time live seat decrementing on student slot browsing pages without requiring manual page refresh.
-- **Automated Scorecard PDF Export**: Incorporating ReportLab or Weasyprint to allow students and administrators to download signed academic PDF scorecards.
-- **Multi-Factor Authentication (MFA)**: Adding TOTP-based 2FA for examiner and administrative accounts.
-
----
-
-## 10. Local Deployment & Setup Guide
-
-### Step 1: Environment Setup
-```bash
-# Clone and enter the project repository
-cd examination_management_portal
-
-# Create and activate a Python virtual environment
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### Step 2: Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### Step 3: Initialize Database Programmatically
-```bash
-python3 database/init_db.py
-```
-*Creates `instance/emp.sqlite` and seeds the default administrator account.*
-
-### Step 4: Run the Web Server
-```bash
-python3 app.py
-```
-*Server launches at `http://127.0.0.1:5000/`.*
-
-### Step 5: Default Administrator Credentials
-- **Login URL**: `http://127.0.0.1:5000/auth/login`
-- **Email**: `admin@emp.iitm.ac.in`
-- **Password**: `AdminPassword123!`
-
-### Step 6: Execute Automated Test Suite
-```bash
-python3 -m unittest discover tests -v
-```
-*(Executes all 76 unit and integration test cases).*
+### Links & Submission Resources
+- **Project Repository**: [GitHub Repository](https://github.com/25f3002106/mad1_examination_management_portal.git)
+- **Demo Video Walkthrough**: [Google Drive Video Presentation](https://drive.google.com/file/d/1KCQ8O46NbcouLB5uCalOvUGKzvFOgWRU/view?usp=drive_link)
+- **Submission ZIP Archive**: `examination_management_portal.zip` (clean single root folder without `.git` or caches)
